@@ -86,7 +86,7 @@ st.sidebar.header("Settings")
 ticker = st.sidebar.text_input("Enter Stock Ticker (e.g., AAPL, TSLA, MSFT)", "AAPL")
 period = st.sidebar.selectbox("Select Period", ["1mo", "3mo", "6mo", "1y", "2y", "5y"])
 interval = st.sidebar.selectbox("Select Interval", ["1d", "1wk", "1mo"])
-<<<<<<< HEAD
+
 
 # -------------------- FETCH DATA --------------------
 try:
