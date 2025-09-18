@@ -1,52 +1,101 @@
 import streamlit as st
 import yfinance as yf
+import datetime
+import requests
+from textblob import TextBlob
 import pandas as pd
-import matplotlib.pyplot as plt
 
-st.title("Stock Trend Visualizer")
+# -------------------- APP CONFIG --------------------
+st.set_page_config(page_title="FinLens AI", page_icon="📈", layout="wide")
 
-# Input stock ticker
-ticker = st.text_input("Enter Stock Symbol (e.g., AAPL):")
+st.title("📊 FinLens AI - Your Gen Z Finance Lens")
+st.markdown("**Making Wall Street a Walk Down Your Street 🚀**")
 
-# Input date range
-start_date = st.date_input("Start date", pd.to_datetime("2025-01-01"))
-end_date = st.date_input("End date", pd.to_datetime("today"))
+# -------------------- SIDEBAR --------------------
+st.sidebar.header("Settings")
+ticker = st.sidebar.text_input("Enter Stock Ticker (e.g., AAPL, TSLA, MSFT)", "AAPL")
+period = st.sidebar.selectbox("Select Period", ["1mo", "3mo", "6mo", "1y", "2y", "5y"])
+interval = st.sidebar.selectbox("Select Interval", ["1d", "1wk", "1mo"])
 
-if ticker:
-    # Fetch data
-    data = yf.download(ticker, start=start_date, end=end_date)
-    
-    if not data.empty:
-        st.subheader(f"{ticker} Closing Price")
-        plt.figure(figsize=(10,5))
-        plt.plot(data['Close'], label="Close Price")
-        plt.xlabel("Date")
-        plt.ylabel("Price ($)")
-        plt.legend()
-        st.pyplot(plt)
-        
-        # Moving averages
-        data['MA20'] = data['Close'].rolling(window=20).mean()
-        data['MA50'] = data['Close'].rolling(window=50).mean()
-        
-        st.subheader(f"{ticker} Closing Price with Moving Averages")
-        plt.figure(figsize=(10,5))
-        plt.plot(data['Close'], label="Close")
-        plt.plot(data['MA20'], label="20-day MA")
-        plt.plot(data['MA50'], label="50-day MA")
-        plt.legend()
-        st.pyplot(plt)
-        
-        # Buy/Sell signals
-        signals = []
-        for i in range(1, len(data)):
-            if data['MA20'].iloc[i] > data['MA50'].iloc[i] and data['MA20'].iloc[i-1] <= data['MA50'].iloc[i-1]:
-                signals.append(f"Buy signal on {data.index[i].date()}")
-            elif data['MA20'].iloc[i] < data['MA50'].iloc[i] and data['MA20'].iloc[i-1] >= data['MA50'].iloc[i-1]:
-                signals.append(f"Sell signal on {data.index[i].date()}")
-        if signals:
-            st.subheader("Trend Alerts")
-            for s in signals:
-                st.write(s)
-    else:
-        st.write("No data found for this ticker.")
+# -------------------- FETCH DATA --------------------
+try:
+    stock = yf.Ticker(ticker)
+    hist = stock.history(period=period, interval=interval)
+
+    # Company info
+    info = stock.info
+except Exception as e:
+    st.error(f"⚠️ Could not fetch data: {e}")
+    st.stop()
+
+# -------------------- TABS --------------------
+tab1, tab2, tab3, tab4 = st.tabs(["📊 Company Overview", "📉 Trends", "📰 Sentiment", "🎮 Storytelling"])
+
+# -------------------- TAB 1: COMPANY OVERVIEW --------------------
+with tab1:
+    st.subheader(f"Company Overview: {info.get('longName', ticker)}")
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Market Cap", f"${info.get('marketCap', 'N/A'):,}")
+    col2.metric("Revenue", f"${info.get('totalRevenue', 'N/A'):,}" if info.get("totalRevenue") else "N/A")
+    col3.metric("P/E Ratio", round(info.get("trailingPE", 0), 2) if info.get("trailingPE") else "N/A")
+    col4.metric("EPS", round(info.get("trailingEps", 0), 2) if info.get("trailingEps") else "N/A")
+
+# -------------------- TAB 2: TRENDS --------------------
+with tab2:
+    st.subheader("Stock Price Trends")
+
+    st.line_chart(hist["Close"])
+
+    # Add moving averages
+    hist["MA20"] = hist["Close"].rolling(window=20).mean()
+    hist["MA50"] = hist["Close"].rolling(window=50).mean()
+    st.line_chart(hist[["Close", "MA20", "MA50"]])
+
+# -------------------- TAB 3: NEWS & SENTIMENT --------------------
+with tab3:
+    st.subheader(f"Recent News on {ticker}")
+
+    # Free Yahoo Finance news API (unofficial)
+    url = f"https://query1.finance.yahoo.com/v1/finance/search?q={ticker}"
+    try:
+        response = requests.get(url).json()
+        if "news" in response:
+            news_list = response["news"][:5]
+            for article in news_list:
+                title = article.get("title", "")
+                link = article.get("link", "")
+                sentiment = TextBlob(title).sentiment.polarity
+                sentiment_label = "😊 Positive" if sentiment > 0 else "😐 Neutral" if sentiment == 0 else "😡 Negative"
+                st.write(f"**[{title}]({link})** → Sentiment: {sentiment_label}")
+        else:
+            st.info("No news found.")
+    except:
+        st.error("Could not fetch news at the moment.")
+
+# -------------------- TAB 4: STORYTELLING --------------------
+with tab4:
+    st.subheader("Gen Z Storytelling Mode 🎮✨")
+
+    pe = info.get("trailingPE", None)
+    debt = info.get("totalDebt", None)
+    mc = info.get("marketCap", None)
+
+    if pe:
+        if pe > 40:
+            st.write("📈 This stock is like a **supercar at full speed** – exciting but might crash anytime 🚗💨.")
+        elif pe < 10:
+            st.write("🛠️ This company is like a **reliable old Toyota** – not flashy, but steady and undervalued 🚙.")
+        else:
+            st.write("⚖️ Balanced vibes – like a gamer with both skill **and** good ping 🎮⚡.")
+
+    if debt:
+        if debt > mc * 0.5:
+            st.write("💸 This company’s debt is heavy – like carrying 4 teammates in Valorant 🎯.")
+        else:
+            st.write("✅ Debt under control – like a pro gamer who knows when to reload 🔫.")
+
+    st.info("These are **rule-based analogies** for now. Future versions will use AI storytelling models 🎤.")
+
+# -------------------- END --------------------
+st.success("FinLens AI Lite Ready ✅")
