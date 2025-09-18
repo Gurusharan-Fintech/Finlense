@@ -80,7 +80,7 @@ st.set_page_config(page_title="FinLens AI", page_icon="📈", layout="wide")
 st.title("📊 FinLens AI - Your Gen Z Finance Lens")
 st.markdown("**Making Wall Street a Walk Down Your Street 🚀**")
 
->>>>>>> 7270e8f20ae885792fc613b1d0168063a05e2739
+
 # -------------------- SIDEBAR --------------------
 st.sidebar.header("Settings")
 ticker = st.sidebar.text_input("Enter Stock Ticker (e.g., AAPL, TSLA, MSFT)", "AAPL")
