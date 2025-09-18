@@ -27,3 +27,4 @@ A small fintech project to visualize stock trends using Python and Streamlit.
 ![Python](https://img.shields.io/badge/python-3.11-blue)
 ![Streamlit](https://img.shields.io/badge/streamlit-app-success)
 ![Live Demo](https://gjwa8yvcs8jmukmyqseuqq.streamlit.app/)
+![App Screenshot](screenshot.jpg)
