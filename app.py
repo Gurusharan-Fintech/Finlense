@@ -6,8 +6,8 @@ from textblob import TextBlob
 import pandas as pd
 
 # Load CSS from styles.css
-def load_css(style.css: str):
-    with open(style.css) as f:
+def load_css(styles.css: str):
+    with open(styles.css) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # Call the function and pass your CSS file
