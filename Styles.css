@@ -1,44 +1,70 @@
-/* --- Background --- */
+/* --- Global --- */
 body {
-    background-color: #f4f7fc;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #0c1445, #1d245c);
+    font-family: 'Poppins', sans-serif;
+    color: #fff;
 }
 
-/* --- Main title --- */
-h1 {
-    color: #0d47a1;
-    font-size: 3rem;
+h1, h2, h3, label {
+    color: #fff;
+}
+
+/* --- Hero Section --- */
+.hero {
     text-align: center;
+    padding: 50px 20px;
+}
+
+.hero h1 {
+    font-size: 3rem;
     font-weight: bold;
+    margin-bottom: 10px;
 }
 
-/* --- Sidebar --- */
-[data-testid="stSidebar"] {
-    background-color: #e3f2fd;
-    padding: 20px;
-    border-radius: 12px;
+.hero p {
+    font-size: 1.2rem;
+    opacity: 0.8;
 }
 
-/* --- Metrics cards --- */
-.css-1yxon9r {
-    background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    padding: 15px;
-}
-
-/* --- Buttons / inputs --- */
-.stButton>button {
-    background-color: #0d47a1;
+/* --- Stock input section --- */
+.stTextInput input, .stDateInput input {
+    border-radius: 10px;
+    border: 2px solid #4fc3f7;
+    background: #1f2a50;
     color: white;
-    border-radius: 10px;
-    padding: 0.5rem 1rem;
+    padding: 8px;
+}
+
+.stButton>button {
+    background: #4fc3f7;
+    color: black;
+    border-radius: 8px;
+    padding: 0.6rem 1.2rem;
     font-weight: bold;
+    transition: all 0.3s ease;
 }
 
-.stTextInput>div>input {
-    border-radius: 10px;
-    border: 1px solid #0d47a1;
-    padding: 5px;
+.stButton>button:hover {
+    background: #29b6f6;
+    transform: translateY(-2px);
 }
 
+/* --- Tabs --- */
+.stTabs [role="tablist"] {
+    justify-content: center;
+    gap: 20px;
+}
+
+.stTabs [role="tab"] {
+    background: #1f2a50;
+    color: white;
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.stTabs [role="tab"][aria-selected="true"] {
+    background: #4fc3f7;
+    color: black;
+}
