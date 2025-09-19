@@ -75,8 +75,12 @@ try:
     stock = yf.Ticker(ticker)
     hist = stock.history(period=period, interval=interval)
 
-    # Company info
-    info = stock.info
+    # Try new yfinance method
+    try:
+        info = stock.get_info()
+    except:
+        info = stock.info  # fallback for older versions
+
 except Exception as e:
     st.error(f"⚠️ Could not fetch data: {e}")
     st.stop()
