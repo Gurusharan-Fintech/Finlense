@@ -5,69 +5,13 @@ import requests
 from textblob import TextBlob
 import pandas as pd
 
-# -------------------- CUSTOM CSS --------------------
-st.markdown(
-    """
-    <style>
-    /* --- Background --- */
-    body {
-        background-color: #f4f7fc;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+# Load CSS from styles.css
+def load_css(style.css: str):
+    with open(style.css) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-    /* --- Main title --- */
-    .css-1d391kg h1 {
-        color: #0d47a1;
-        font-size: 3rem;
-        text-align: center;
-        font-weight: bold;
-    }
-
-    /* --- Tabs styling --- */
-    .css-1v3fvcr {
-        font-size: 1.1rem;
-        font-weight: bold;
-        color: #0d47a1;
-    }
-
-    /* --- Sidebar --- */
-    [data-testid="stSidebar"] {
-        background-color: #e3f2fd;
-        padding: 20px;
-        border-radius: 12px;
-    }
-
-    /* --- Metrics cards --- */
-    .css-1yxon9r {
-        background-color: #ffffff;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        padding: 15px;
-    }
-
-    /* --- Buttons / inputs --- */
-    .stButton>button {
-        background-color: #0d47a1;
-        color: white;
-        border-radius: 10px;
-        padding: 0.5rem 1rem;
-        font-weight: bold;
-    }
-
-    .stTextInput>div>input {
-        border-radius: 10px;
-        border: 1px solid #0d47a1;
-        padding: 5px;
-    }
-
-    /* --- Links / badges --- */
-    a {
-        text-decoration: none;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+# Call the function
+load_css("styles.css")
 
 
 
