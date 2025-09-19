@@ -5,35 +5,66 @@ import requests
 from textblob import TextBlob
 import pandas as pd
 
-def load_css(file_name: str):
-    """Load external CSS file into the Streamlit app"""
-    with open(file_name) as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+# -------------------- APP CONFIG --------------------
+st.set_page_config(page_title="FinLens AI", page_icon="📈", layout="wide")
 
-# Call the function and pass your CSS file
-load_css("Styles.css")
+st.title("📊 FinLens AI - Your Gen Z Finance Lens")
+st.markdown("**Making Wall Street a Walk Down Your Street 🚀**")
+
+# -------------------- SIDEBAR --------------------
+st.sidebar.header("Settings")
+ticker = st.sidebar.text_input("Enter Stock Ticker (e.g., AAPL, TSLA, MSFT)", "AAPL")
+period = st.sidebar.selectbox("Select Period", ["1mo", "3mo", "6mo", "1y", "2y", "5y"])
+interval = st.sidebar.selectbox("Select Interval", ["1d", "1wk", "1mo"])
+
+# -------------------- FETCH DATA --------------------
+try:
+    stock = yf.Ticker(ticker)
+    hist = stock.history(period=period, interval=interval)
+    info = stock.info
+except Exception as e:
+    st.error(f"⚠️ Could not fetch data: {e}")
+    st.stop()
 
 # -------------------- TABS --------------------
-tab1, tab2, tab3, tab4 = st.tabs(["🎮 Storytelling", "📑 PPT Generator", "🧩 Analogies", "📊 Professional Data & Trends"])
-
+tab1, tab2, tab3, tab4 = st.tabs(
+    ["🎮 Storytelling", "📑 PPT Generator", "🧩 Analogies", "📊 Professional Data & Trends"]
+)
 
 # -------------------- TAB 1: STORYTELLING --------------------
 with tab1:
-    st.subheader("Gen Z Storytelling Mode 🎮✨")
-    # (reuse your storytelling logic here)
+    st.subheader("Gen Z Storytelling Mode ✨")
 
+    pe = info.get("trailingPE", None)
+    debt = info.get("totalDebt", None)
+    mc = info.get("marketCap", None)
+
+    if pe:
+        if pe > 40:
+            st.write("📈 This stock is like a **supercar at full speed** – exciting but might crash anytime 🚗💨.")
+        elif pe < 10:
+            st.write("🛠️ This company is like a **reliable old Toyota** – not flashy, but steady and undervalued 🚙.")
+        else:
+            st.write("⚖️ Balanced vibes – like a gamer with both skill **and** good ping 🎮⚡.")
+
+    if debt and mc:
+        if debt > mc * 0.5:
+            st.write("💸 This company’s debt is heavy – like carrying 4 teammates in Valorant 🎯.")
+        else:
+            st.write("✅ Debt under control – like a pro gamer who knows when to reload 🔫.")
+
+    st.info("These are **rule-based analogies** for now. Future versions will use AI storytelling models 🎤.")
 
 # -------------------- TAB 2: PPT GENERATOR --------------------
 with tab2:
-    st.subheader("📑 Auto PPT Generator")
-    st.info("Here we’ll later generate PowerPoint slides about the stock.")
-
+    st.subheader("Auto PPT Generator 📑")
+    st.info("⚡ Coming soon: Generate pitch-deck style slides for your selected stock.")
 
 # -------------------- TAB 3: ANALOGIES --------------------
 with tab3:
-    st.subheader("🧩 Fun Analogies")
-    st.info("We’ll later build this section to explain finance using memes/analogies.")
-
+    st.subheader("Fun Analogies 🧩")
+    st.write("👉 Example: If Tesla was a student, it would be the **kid who aces math but forgets homework** 🤓📉.")
+    st.write("👉 Example: Apple is like the **friend who always has the latest iPhone before anyone else** 🍏📱.")
 
 # -------------------- TAB 4: PROFESSIONAL DATA & TRENDS --------------------
 with tab4:
@@ -53,8 +84,24 @@ with tab4:
     st.line_chart(hist[["Close", "MA20", "MA50"]])
 
     st.subheader(f"Recent News on {ticker}")
-    # (reuse your news + sentiment code here)
+    url = f"https://query1.finance.yahoo.com/v1/finance/search?q={ticker}"
+    try:
+        response = requests.get(url).json()
+        if "news" in response:
+            news_list = response["news"][:5]
+            for article in news_list:
+                title = article.get("title", "")
+                link = article.get("link", "")
+                sentiment = TextBlob(title).sentiment.polarity
+                sentiment_label = "😊 Positive" if sentiment > 0 else "😐 Neutral" if sentiment == 0 else "😡 Negative"
+                st.write(f"**[{title}]({link})** → Sentiment: {sentiment_label}")
+        else:
+            st.info("No news found.")
+    except:
+        st.error("Could not fetch news at the moment.")
 
+# -------------------- END --------------------
+st.success("FinLens AI Tabs Ready ✅")
 
 # -------------------- APP CONFIG --------------------
 st.set_page_config(page_title="FinLens AI", page_icon="📈", layout="wide")
