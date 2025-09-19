@@ -31,23 +31,23 @@ def fetch_info(ticker: str):
    t = yf.Ticker(ticker)
 # try modern method first
 try:
-info = t.get_info()
-except Exception:
-info = t.info if hasattr(t, "info") else {}
-return info
+ info = t.get_info()
+ except Exception:
+  info = t.info if hasattr(t, "info") else {}
+ return info
 
 
 @st.cache_data(show_spinner=False)
 def fetch_news_via_yf(ticker: str):
    t = yf.Ticker(ticker)
 try:
-news = t.news
+ news = t.news
 return news
 except Exception:
 # fallback to Yahoo search
 url = f"https://query1.finance.yahoo.com/v1/finance/search?q={ticker}"
 try:
-resp = requests.get(url, timeout=6).json()
+ resp = requests.get(url, timeout=6).json()
 return resp.get("news", [])
 except Exception:
 return []
