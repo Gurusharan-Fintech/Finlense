@@ -6,12 +6,12 @@ from textblob import TextBlob
 import pandas as pd
 
 # Load CSS from styles.css
-def load_css(styles.css: str):
-    with open(styles.css) as f:
+def load_css(Styles.css: str):
+    with open(Styles.css) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # Call the function and pass your CSS file
-load_css("styles.css")
+load_css("Styles.css")
 
 # -------------------- APP CONFIG --------------------
 st.set_page_config(page_title="FinLens AI", page_icon="📈", layout="wide")
