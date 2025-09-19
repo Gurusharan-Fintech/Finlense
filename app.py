@@ -71,6 +71,8 @@ interval = st.sidebar.selectbox("Select Interval", ["1d", "1wk", "1mo"])
 
 
 # -------------------- FETCH DATA --------------------
+info = {}  # initialize so it's always defined
+
 try:
     stock = yf.Ticker(ticker)
     hist = stock.history(period=period, interval=interval)
@@ -79,11 +81,12 @@ try:
     try:
         info = stock.get_info()
     except:
-        info = stock.info  # fallback for older versions
+        info = stock.info  # fallback
 
 except Exception as e:
     st.error(f"⚠️ Could not fetch data: {e}")
     st.stop()
+
 
 # -------------------- TABS --------------------
 tab1, tab2, tab3, tab4 = st.tabs(["🎮 Storytelling", "📑 PPT Generator", "🧩 Analogies", "📊 Professional Data & Trends"])
