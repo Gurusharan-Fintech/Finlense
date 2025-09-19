@@ -32,9 +32,9 @@ def fetch_info(ticker: str):
 # try modern method first
 try:
  info = t.get_info()
- except Exception:
+except Exception:
   info = t.info if hasattr(t, "info") else {}
- return info
+return info
 
 
 @st.cache_data(show_spinner=False)
@@ -57,13 +57,13 @@ return []
 
 def nice_num(x):
    try:
-   if x is None:
+    if x is None:
    return "N/A"
-   if abs(x) >= 1_000_000_000:
+    if abs(x) >= 1_000_000_000:
    return f"${x/1_000_000_000:,.2f}B"
-   if abs(x) >= 1_000_000:
+    if abs(x) >= 1_000_000:
    return f"${x/1_000_000:,.2f}M"
-   if abs(x) >= 1_000:
+    if abs(x) >= 1_000:
    return f"${x/1_000:,.2f}K"
    return f"${x:,.2f}"
    except Exception:
