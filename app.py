@@ -13,8 +13,9 @@ st.set_page_config(page_title="FinLens AI", page_icon="📈", layout="wide")
 
 
 # Inject CSS
-with open("Styles.css", "r") as f:
-st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+with open("Styles.css") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
 
 
 # -------------------- HELPERS --------------------
