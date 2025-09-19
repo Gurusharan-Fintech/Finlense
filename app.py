@@ -21,14 +21,14 @@ with open("Styles.css") as f:
 # -------------------- HELPERS --------------------
 @st.cache_data(show_spinner=False)
 def fetch_history(ticker: str, period: str, interval: str):
-t = yf.Ticker(ticker)
-hist = t.history(period=period, interval=interval)
-return hist
+   t = yf.Ticker(ticker)
+   hist = t.history(period=period, interval=interval)
+   return hist
 
 
 @st.cache_data(show_spinner=False)
 def fetch_info(ticker: str):
-t = yf.Ticker(ticker)
+   t = yf.Ticker(ticker)
 # try modern method first
 try:
 info = t.get_info()
@@ -39,7 +39,7 @@ return info
 
 @st.cache_data(show_spinner=False)
 def fetch_news_via_yf(ticker: str):
-t = yf.Ticker(ticker)
+   t = yf.Ticker(ticker)
 try:
 news = t.news
 return news
@@ -56,25 +56,25 @@ return []
 
 
 def nice_num(x):
-try:
-if x is None:
-return "N/A"
-if abs(x) >= 1_000_000_000:
-return f"${x/1_000_000_000:,.2f}B"
-if abs(x) >= 1_000_000:
-return f"${x/1_000_000:,.2f}M"
-if abs(x) >= 1_000:
-return f"${x/1_000:,.2f}K"
-return f"${x:,.2f}"
-except Exception:
-return "N/A"
+   try:
+   if x is None:
+   return "N/A"
+   if abs(x) >= 1_000_000_000:
+   return f"${x/1_000_000_000:,.2f}B"
+   if abs(x) >= 1_000_000:
+   return f"${x/1_000_000:,.2f}M"
+   if abs(x) >= 1_000:
+   return f"${x/1_000:,.2f}K"
+   return f"${x:,.2f}"
+   except Exception:
+   return "N/A"
 
 
 
 
 def sentiment_label(score: float):
-if score > 0.1:
-return "Positive 😊"
-if score < -0.1:
-return "Negative 😡"
- unsafe_allow_html=True
+   if score > 0.1:
+   return "Positive 😊"
+   if score < -0.1:
+   return "Negative 😡"
+   unsafe_allow_html=True
