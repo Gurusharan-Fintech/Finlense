@@ -1,80 +1,108 @@
 # app.py
 import streamlit as st
 import yfinance as yf
-import requests
-from textblob import TextBlob
 import pandas as pd
-import numpy as np
-from datetime import datetime
+import matplotlib.pyplot as plt
 
+# ============ Page Config ============
+st.set_page_config(page_title="FinLens AI", layout="wide")
 
-# -------------------- PAGE CONFIG --------------------
-st.set_page_config(page_title="FinLens AI", page_icon="📈", layout="wide")
-
-
-# Inject CSS
-with open("Styles.css") as f:
-    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
-
-
-# -------------------- HELPERS --------------------
-@st.cache_data(show_spinner=False)
-def fetch_history(ticker: str, period: str, interval: str):
-   t = yf.Ticker(ticker)
-   hist = t.history(period=period, interval=interval)
-   return hist
-
-
-@st.cache_data(show_spinner=False)
-def fetch_info(ticker: str):
-   t = yf.Ticker(ticker)
-# try modern method first
+# ============ CSS Loader ============
 try:
- info = t.get_info()
-except Exception:
-  info = t.info if hasattr(t, "info") else {}
-return info
+    with open("Styles.css") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+except FileNotFoundError:
+    st.warning("⚠️ Styles.css not found. Using default Streamlit theme.")
 
+# ============ Helper Functions ============
 
-@st.cache_data(show_spinner=False)
-def fetch_news_via_yf(ticker: str):
-   t = yf.Ticker(ticker)
-try:
- news = t.news
-return news
-except Exception:
-# fallback to Yahoo search
-url = f"https://query1.finance.yahoo.com/v1/finance/search?q={ticker}"
-try:
- resp = requests.get(url, timeout=6).json()
-return resp.get("news", [])
-except Exception:
-return []
+def load_data(ticker):
+    """Fetch ticker object and historical stock data."""
+    try:
+        t = yf.Ticker(ticker)
+        hist = t.history(period="1y")
+        return t, hist
+    except Exception as e:
+        st.error(f"Error loading data for {ticker}: {e}")
+        return None, pd.DataFrame()
 
+def get_company_news(ticker):
+    """Fetch company news via yfinance (fallback if unavailable)."""
+    try:
+        t = yf.Ticker(ticker)
+        news = t.news
+        return news if news else []
+    except Exception as e:
+        return [{"title": "News unavailable", "publisher": str(e)}]
 
+def format_number(n):
+    """Safely format large numbers with commas."""
+    try:
+        return f"{n:,}"
+    except Exception:
+        return "N/A"
 
+# ============ App Layout ============
 
-def nice_num(x):
-   try:
-    if x is None:
-   return "N/A"
-    if abs(x) >= 1_000_000_000:
-   return f"${x/1_000_000_000:,.2f}B"
-    if abs(x) >= 1_000_000:
-   return f"${x/1_000_000:,.2f}M"
-    if abs(x) >= 1_000:
-   return f"${x/1_000:,.2f}K"
-   return f"${x:,.2f}"
-   except Exception:
-   return "N/A"
+st.title("📊 FinLens AI — The Next Generation's Financial Analyst")
 
+# Sidebar inputs
+st.sidebar.header("🔍 Company Search")
+ticker = st.sidebar.text_input("Enter Company Ticker (e.g. AAPL, TSLA, MSFT)", "AAPL")
 
+# Main content
+if ticker:
+    t, hist = load_data(ticker)
 
+    if t:
+        info = t.info
 
-def sentiment_label(score: float):
-   if score > 0.1:
-   return "Positive 😊"
-   if score < -0.1:
-   return "Negative 😡"
-   unsafe_allow_html=True
+        # Company Overview
+        st.subheader("🏢 Company Overview")
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Market Cap", format_number(info.get("marketCap")))
+        col2.metric("Forward P/E", info.get("forwardPE", "N/A"))
+        col3.metric("Beta", info.get("beta", "N/A"))
+
+        st.write(info.get("longBusinessSummary", "No description available."))
+
+        # Stock Price History
+        st.subheader("📈 Stock Price History (1Y)")
+        if not hist.empty:
+            st.line_chart(hist["Close"])
+        else:
+            st.warning("No historical data available.")
+
+        # Latest News
+        st.subheader("📰 Latest News")
+        news_items = get_company_news(ticker)
+        if news_items:
+            for n in news_items[:5]:
+                st.write(f"- **{n['title']}** ({n.get('publisher', 'Unknown')})")
+        else:
+            st.info("No recent news found.")
+
+        # Storytelling Analogies
+        st.subheader("🎭 Storytelling Mode")
+        analogy_mode = st.selectbox(
+            "Explain finance using:",
+            ["Default", "Cars", "Sports", "Gaming", "Fashion"]
+        )
+
+        if analogy_mode == "Cars":
+            st.info(f"{ticker} is like a car brand — Market Cap is its horsepower, "
+                    f"and stock volatility is the handling on sharp turns.")
+        elif analogy_mode == "Sports":
+            st.info(f"{ticker} is like a sports team — Revenue is its score, "
+                    f"and expenses are fouls holding it back.")
+        elif analogy_mode == "Gaming":
+            st.info(f"{ticker} is like a video game — Profit margins are the XP you gain, "
+                    f"and competitors are boss fights.")
+        elif analogy_mode == "Fashion":
+            st.info(f"{ticker} is like a fashion label — Brand value is its runway presence, "
+                    f"and innovation is this season's collection.")
+        else:
+            st.write("Switch analogy mode to see finance explained in fun ways!")
+
+else:
+    st.info("Enter a company ticker in the sidebar to begin.")
