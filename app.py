@@ -13,7 +13,47 @@ def load_css(file_name: str):
 # Call the function and pass your CSS file
 load_css("Styles.css")
 
+# -------------------- TABS --------------------
+tab1, tab2, tab3, tab4 = st.tabs(["🎮 Storytelling", "📑 PPT Generator", "🧩 Analogies", "📊 Professional Data & Trends"])
 
+
+# -------------------- TAB 1: STORYTELLING --------------------
+with tab1:
+    st.subheader("Gen Z Storytelling Mode 🎮✨")
+    # (reuse your storytelling logic here)
+
+
+# -------------------- TAB 2: PPT GENERATOR --------------------
+with tab2:
+    st.subheader("📑 Auto PPT Generator")
+    st.info("Here we’ll later generate PowerPoint slides about the stock.")
+
+
+# -------------------- TAB 3: ANALOGIES --------------------
+with tab3:
+    st.subheader("🧩 Fun Analogies")
+    st.info("We’ll later build this section to explain finance using memes/analogies.")
+
+
+# -------------------- TAB 4: PROFESSIONAL DATA & TRENDS --------------------
+with tab4:
+    st.subheader(f"Company Overview: {info.get('longName', ticker)}")
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Market Cap", f"${info.get('marketCap', 'N/A'):,}")
+    col2.metric("Revenue", f"${info.get('totalRevenue', 'N/A'):,}" if info.get("totalRevenue") else "N/A")
+    col3.metric("P/E Ratio", round(info.get("trailingPE", 0), 2) if info.get("trailingPE") else "N/A")
+    col4.metric("EPS", round(info.get("trailingEps", 0), 2) if info.get("trailingEps") else "N/A")
+
+    st.subheader("Stock Price Trends")
+    st.line_chart(hist["Close"])
+
+    hist["MA20"] = hist["Close"].rolling(window=20).mean()
+    hist["MA50"] = hist["Close"].rolling(window=50).mean()
+    st.line_chart(hist[["Close", "MA20", "MA50"]])
+
+    st.subheader(f"Recent News on {ticker}")
+    # (reuse your news + sentiment code here)
 
 
 # -------------------- APP CONFIG --------------------
@@ -42,8 +82,7 @@ except Exception as e:
     st.stop()
 
 # -------------------- TABS --------------------
-tab1, tab2, tab3, tab4 = st.tabs(["📊 Company Overview", "📉 Trends", "📰 Sentiment", "🎮 Storytelling"])
-
+tab1, tab2, tab3, tab4 = st.tabs(["🎮 Storytelling", "📑 PPT Generator", "🧩 Analogies", "📊 Professional Data & Trends"])
 # -------------------- TAB 1: COMPANY OVERVIEW --------------------
 with tab1:
     st.subheader(f"Company Overview: {info.get('longName', ticker)}")
