@@ -12,10 +12,26 @@ st.title("📊 FinLens AI - Your Gen Z Finance Lens")
 st.markdown("**Making Wall Street a Walk Down Your Street 🚀**")
 
 # -------------------- SIDEBAR --------------------
+# -------------------- SIDEBAR --------------------
 st.sidebar.header("Settings")
-ticker = st.sidebar.text_input("Enter Stock Ticker (e.g., AAPL, TSLA, MSFT)", "AAPL")
-period = st.sidebar.selectbox("Select Period", ["1mo", "3mo", "6mo", "1y", "2y", "5y"])
-interval = st.sidebar.selectbox("Select Interval", ["1d", "1wk", "1mo"])
+
+ticker = st.sidebar.text_input(
+    "Enter Stock Ticker (e.g., AAPL, TSLA, MSFT)", 
+    "AAPL",
+    key="ticker_input"   # 👈 unique key added
+)
+
+period = st.sidebar.selectbox(
+    "Select Period", 
+    ["1mo", "3mo", "6mo", "1y", "2y", "5y"], 
+    key="period_select"  # 👈 unique key added
+)
+
+interval = st.sidebar.selectbox(
+    "Select Interval", 
+    ["1d", "1wk", "1mo"], 
+    key="interval_select"  # 👈 unique key added
+)
 
 # -------------------- FETCH DATA --------------------
 try:
