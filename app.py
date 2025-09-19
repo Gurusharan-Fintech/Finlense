@@ -76,4 +76,4 @@ if score > 0.1:
 return "Positive 😊"
 if score < -0.1:
 return "Negative 😡"
-", unsafe_allow_html=True)
+ unsafe_allow_html=True)
