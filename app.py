@@ -73,14 +73,22 @@ if ticker:
         else:
             st.warning("No historical data available.")
 
+        
         # Latest News
-        st.subheader("📰 Latest News")
-        news_items = get_company_news(ticker)
-        if news_items:
-            for n in news_items[:5]:
-                st.write(f"- **{n['title']}** ({n.get('publisher', 'Unknown')})")
+st.subheader("📰 Latest News")
+news_items = get_company_news(ticker)
+if news_items:
+    for n in news_items[:5]:
+        title = n.get("title", "No title available")
+        publisher = n.get("publisher", "Unknown")
+        link = n.get("link", None)
+
+        if link:
+            st.write(f"- **[{title}]({link})** ({publisher})")
         else:
-            st.info("No recent news found.")
+            st.write(f"- **{title}** ({publisher})")
+else:
+    st.info("No recent news found.")
 
         # Storytelling Analogies
         st.subheader("🎭 Storytelling Mode")
