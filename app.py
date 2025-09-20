@@ -123,6 +123,6 @@ with col2:
     if st.button("📊 Professional Data & Trends"):
         if ticker:
             st.session_state["selected_ticker"] = ticker
-            st.switch_page("pages/4_Professional_Data.py")
+            st.switch_page("pages/4_Professional_Dashboard.py")
         else:
             st.error("Pick a stock first!")
