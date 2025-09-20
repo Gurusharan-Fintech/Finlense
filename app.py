@@ -56,19 +56,43 @@ else:
 # -------------------- BUTTON STYLING --------------------
 st.markdown("### 🚀 Choose a mode")
 
-button_css = """
-<style>
-div.stButton > button {
-    border-radius: 12px;
-    height: 60px;
-    font-size: 18px;
-    font-weight: 600;
-    width: 100%;
-    margin-top: 8px;
-}
-</style>
-"""
-st.markdown(button_css, unsafe_allow_html=True)
+st.markdown(
+    """
+    <style>
+    /* Make buttons bigger and center text */
+    div.stButton > button {
+        width: 220px; 
+        height: 70px;
+        font-size: 20px;
+        font-weight: 600;
+        text-align: center;
+        border-radius: 15px;
+        margin: 15px;
+    }
+
+    /* Center the 4 buttons in a grid */
+    .button-container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    /* Make dropdown (selectbox) bigger */
+    div[data-baseweb="select"] {
+        height: 55px !important;
+        font-size: 18px !important;
+    }
+
+    div[data-baseweb="select"] > div {
+        height: 55px !important;
+        font-size: 18px !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 
 # -------------------- BUTTON LAYOUT --------------------
 col1, col2 = st.columns(2)
