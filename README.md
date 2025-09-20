@@ -22,4 +22,4 @@ The complexities of finance and discussions no younger generation can have on me
 
 ![Python](https://img.shields.io/badge/python-3.11-blue)
 ![Streamlit](https://img.shields.io/badge/streamlit-app-success)
-[![Streamlit App](https://img.shields.io/badge/Streamlit-Live%20Demo-brightgreen?logo=streamlit)]([https://finlense1.streamlit.app/](https://finlense12345676.streamlit.app/))
+[![Streamlit App](https://img.shields.io/badge/Streamlit-Live%20Demo-brightgreen?logo=streamlit)](https://finlense12345676.streamlit.app/)
