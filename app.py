@@ -26,14 +26,14 @@ col1, col2 = st.columns(2)
 
 with col1:
     if st.button("🎮 Storytelling", use_container_width=True):
-        st.switch_page("pages/1_Storytelling.py")
+        st.switch_page("Pages/1_Storytelling.py")
 
     if st.button("📑 PPT Generator", use_container_width=True):
-        st.switch_page("pages/2_PPT_Generator.py")
+        st.switch_page("Pages/2_PPT_Generator.py")
 
 with col2:
     if st.button("🧩 Analogies", use_container_width=True):
-        st.switch_page("pages/3_Analogies.py")
+        st.switch_page("Pages/3_Analogies.py")
 
     if st.button("📊 Professional Dashboard", use_container_width=True):
-        st.switch_page("pages/4_Professional_Dashboard.py")
+        st.switch_page("Pages/4_Professional_Dashboard.py")
