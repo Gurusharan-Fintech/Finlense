@@ -6,39 +6,18 @@
     font-size: 1.1rem;
 }
 
-st.markdown(
-    """
-    <style>
-    /* Make buttons bigger and center text */
-    div.stButton > button {
-        width: 220px; 
-        height: 70px;
-        font-size: 20px;
-        font-weight: 600;
-        text-align: center;
-        border-radius: 15px;
-        margin: 15px;
-    }
+/* Buttons */
+.stButton>button {
+    background-color: #0d47a1;
+    color: white;
+    border-radius: 12px;
+    padding: 1rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    transition: 0.3s;
+}
 
-    /* Center the 4 buttons in a grid */
-    .button-container {
-        display: flex;
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: 20px;
-    }
-
-    /* Make dropdown (selectbox) bigger */
-    div[data-baseweb="select"] {
-        height: 55px !important;
-        font-size: 18px !important;
-    }
-
-    div[data-baseweb="select"] > div {
-        height: 55px !important;
-        font-size: 18px !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+.stButton>button:hover {
+    background-color: #1565c0;
+    transform: scale(1.05);
+}
