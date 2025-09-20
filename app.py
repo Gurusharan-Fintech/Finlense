@@ -54,7 +54,7 @@ else:
     st.info("Please choose a stock to continue.")
 
 # -------------------- BUTTON STYLING --------------------
-st.markdown(<center>"### 🚀 Choose a mode" </center>)
+st.markdown("### 🚀 Choose a mode")
 
 st.markdown(
     """
