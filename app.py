@@ -25,7 +25,7 @@ st.markdown("### Choose a mode")
 col1, col2 = st.columns(2)
 
 with col1:
-  if st.button("🎮 Storytelling", use_container_width=True):
+if st.button("🎮 Storytelling", use_container_width=True):
     st.switch_page("1_Storytelling")
 
 if st.button("📑 PPT Generator", use_container_width=True):
