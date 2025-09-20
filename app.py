@@ -61,7 +61,7 @@ st.markdown(
     <style>
     /* Make buttons bigger and center text */
     div.stButton > button {
-        width: 300px; 
+        width: 500px; 
         height: 70px;
         font-size: 20px;
         font-weight: 600;
