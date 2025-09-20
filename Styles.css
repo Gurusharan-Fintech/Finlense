@@ -1,51 +1,71 @@
-/* Styles.css — FinLens AI theme inspired by your images */
-:root{
---bg1: #0f1540;
---bg2: #2b1b6b;
---accent: #4fc3f7;
---card: rgba(255,255,255,0.03);
-}
-
-
+/* ================= GLOBAL ================= */
 body {
-background: linear-gradient(135deg,var(--bg1),var(--bg2));
-color: #eaf2ff;
-font-family: 'Poppins', sans-serif;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #0f1116;
+    color: #f5f5f5;
 }
 
+/* ================= HERO SECTION ================= */
+.hero {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: linear-gradient(135deg, #1e1f29, #14151c);
+    border-radius: 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    margin-bottom: 2rem;
+}
+.hero h1 {
+    font-size: 3rem;
+    color: #4fc3f7;
+    margin-bottom: 0.5rem;
+}
+.hero p {
+    font-size: 1.3rem;
+    color: #cfd8dc;
+}
 
-/* HERO */
-.hero {text-align:left;padding:14px 6px}
-.hero h1{font-size:40px;margin:0 0 6px;color: #fff;letter-spacing: -1px}
-.hero .tag{opacity:0.85;margin-top:6px}
+/* ================= HEADINGS ================= */
+h1, h2, h3, h4 {
+    color: #ffffff;
+    font-weight: 600;
+}
+h2, h3 {
+    border-left: 4px solid #4fc3f7;
+    padding-left: 10px;
+}
 
+/* ================= BUTTONS ================= */
+button[kind="primary"], .stButton>button {
+    background: linear-gradient(135deg, #4fc3f7, #0288d1);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 0.7rem 1.4rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(79, 195, 247, 0.4);
+    transition: all 0.3s ease;
+}
+button[kind="primary"]:hover, .stButton>button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(79, 195, 247, 0.6);
+}
 
-.hero-card{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));padding:12px;border-radius:14px;display:flex;gap:12px;align-items:center}
-.mini-ks{font-size:28px;background:var(--card);padding:8px;border-radius:10px}
-
-
-/* Metric cards */
-.stMetric{background:transparent}
-
-
-/* Tabs look */
-.stTabs [role="tablist"]{justify-content:flex-start;gap:12px;padding-left:6px}
-.stTabs [role="tab"]{background:rgba(255,255,255,0.03);padding:8px 14px;border-radius:10px;color:#eaf2ff}
-.stTabs [role="tab"][aria-selected="true"]{background:var(--accent);color:#001}
-
-
-/* Cards */
-.css-1v3fvcr{background:transparent}
-
-
-/* Buttons */
-.stButton>button{background:linear-gradient(90deg,var(--accent),#29b6f6);color:#001;border-radius:10px;padding:8px 12px;font-weight:600}
-
-
-/* Footer */
-.footer{display:flex;justify-content:space-between;padding:18px 8px;color:rgba(255,255,255,0.7)}
-
-
-/* Small screens tweaks */
-@media (max-width: 700px){
-.hero h1{font-size:28px}
+/* ================= CARDS & CONTAINERS ================= */
+.block-container {
+    padding: 2rem 2rem;
+}
+.stMetric {
+    background: #1e1f29;
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+}
+.stMetric label {
+    font-size: 1rem;
+    color: #b0bec5;
+}
+.stMetric span {
+    font-
