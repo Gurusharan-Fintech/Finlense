@@ -25,15 +25,15 @@ st.markdown("### Choose a mode")
 col1, col2 = st.columns(2)
 
 with col1:
-    if st.button("🎮 Storytelling", use_container_width=True):
-        st.switch_page("pages/1_Storytelling.py")
+if st.button("🎮 Storytelling", use_container_width=True):
+    st.switch_page("1_Storytelling")
 
-    if st.button("📑 PPT Generator", use_container_width=True):
-        st.switch_page("pages/2_PPT_Generator.py")
+if st.button("📑 PPT Generator", use_container_width=True):
+    st.switch_page("2_PPT_Generator")
 
-with col2:
-    if st.button("🧩 Analogies", use_container_width=True):
-        st.switch_page("pages/3_Analogies.py")
+if st.button("🧩 Analogies", use_container_width=True):
+    st.switch_page("3_Analogies")
 
-    if st.button("📊 Professional Dashboard", use_container_width=True):
-        st.switch_page("pages/4_Professional_Dashboard.py")
+if st.button("📊 Professional Data & Trends", use_container_width=True):
+    st.switch_page("4_Professional_Dashboard")
+
