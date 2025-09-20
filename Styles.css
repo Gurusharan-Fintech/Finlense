@@ -1,66 +1,23 @@
-/* General App Styling */
-body {
-    font-family: "Segoe UI", Roboto, Arial, sans-serif;
-    background-color: #f9f9fb;
-    color: #222;
-}
-
-/* Header */
-h1 {
-    text-align: center;
-    font-size: 3rem;
-    color: #0d47a1;
-    margin-bottom: 10px;
-}
-p {
-    text-align: center;
-    font-size: 1.1rem;
-    color: #444;
-}
-
-/* Stock Search Input */
-.stTextInput input {
+/* Search bar */
+.stTextInput>div>input {
     border-radius: 12px;
-    padding: 12px;
-    border: 1px solid #ccc;
-    box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
-    font-size: 1rem;
-    text-align: center;
-}
-
-/* Dropdowns */
-div[data-baseweb="select"] {
-    border-radius: 12px;
-    box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
-    padding: 4px;
-}
-
-/* ----------- BIG ROUNDED TABS ----------- */
-.stTabs [role="tablist"] {
-    display: flex;
-    justify-content: center;
-    gap: 20px; /* spacing between tabs */
-    margin-top: 20px;
-    margin-bottom: 30px;
-}
-
-.stTabs [role="tab"] {
-    background-color: white;
-    padding: 15px 30px;
-    border-radius: 25px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #0d47a1;
+    padding: 10px;
     border: 2px solid #0d47a1;
-    transition: all 0.3s ease-in-out;
+    font-size: 1.1rem;
 }
 
-.stTabs [role="tab"][aria-selected="true"] {
+/* Buttons */
+.stButton>button {
     background-color: #0d47a1;
     color: white;
-    box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+    border-radius: 12px;
+    padding: 1rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    transition: 0.3s;
 }
-.stTabs [role="tab"]:hover {
-    background-color: #e3f2fd;
-    cursor: pointer;
+
+.stButton>button:hover {
+    background-color: #1565c0;
+    transform: scale(1.05);
 }
