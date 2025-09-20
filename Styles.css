@@ -44,19 +44,6 @@ div[data-baseweb="select"] {
     box-shadow: 0px 2px 6px rgba(0,0,0,0.08);
 }
 
-/* Tabs */
-.stTabs [data-baseweb="tab"] {
-    font-size: 1rem;
-    padding: 10px 20px;
-    border-radius: 10px 10px 0 0;
-    background-color: #e3f2fd;
-    margin-right: 5px;
-}
-.stTabs [aria-selected="true"] {
-    background-color: #0d47a1 !important;
-    color: white !important;
-}
-
 /* Metrics */
 [data-testid="stMetricValue"] {
     font-weight: bold;
