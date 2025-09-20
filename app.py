@@ -61,7 +61,7 @@ st.markdown(
     <style>
     /* Make buttons bigger and center text */
     div.stButton > button {
-        width: 220px; 
+        width: 300px; 
         height: 70px;
         font-size: 20px;
         font-weight: 600;
@@ -80,12 +80,12 @@ st.markdown(
 
     /* Make dropdown (selectbox) bigger */
     div[data-baseweb="select"] {
-        height: 55px !important;
+        height: 45px !important;
         font-size: 18px !important;
     }
 
     div[data-baseweb="select"] > div {
-        height: 55px !important;
+        height: 45px !important;
         font-size: 18px !important;
     }
     </style>
