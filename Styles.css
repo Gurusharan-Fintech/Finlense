@@ -1,71 +1,65 @@
-/* ================= GLOBAL ================= */
+/* General App Styling */
 body {
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background-color: #0f1116;
-    color: #f5f5f5;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    background-color: #f9f9fb;
+    color: #222;
 }
 
-/* ================= HERO SECTION ================= */
-.hero {
+/* Header */
+.header-container {
     text-align: center;
-    padding: 3rem 1rem;
-    background: linear-gradient(135deg, #1e1f29, #14151c);
-    border-radius: 20px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-    margin-bottom: 2rem;
+    padding: 40px 0;
 }
-.hero h1 {
+.header-container h1 {
     font-size: 3rem;
-    color: #4fc3f7;
-    margin-bottom: 0.5rem;
+    color: #0d47a1;
+    margin-bottom: 10px;
 }
-.hero p {
-    font-size: 1.3rem;
-    color: #cfd8dc;
-}
-
-/* ================= HEADINGS ================= */
-h1, h2, h3, h4 {
-    color: #ffffff;
-    font-weight: 600;
-}
-h2, h3 {
-    border-left: 4px solid #4fc3f7;
-    padding-left: 10px;
+.header-container p {
+    font-size: 1.2rem;
+    color: #444;
+    margin-top: 0;
 }
 
-/* ================= BUTTONS ================= */
-button[kind="primary"], .stButton>button {
-    background: linear-gradient(135deg, #4fc3f7, #0288d1);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    padding: 0.7rem 1.4rem;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 4px 14px rgba(79, 195, 247, 0.4);
-    transition: all 0.3s ease;
-}
-button[kind="primary"]:hover, .stButton>button:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 18px rgba(79, 195, 247, 0.6);
-}
-
-/* ================= CARDS & CONTAINERS ================= */
-.block-container {
-    padding: 2rem 2rem;
-}
-.stMetric {
-    background: #1e1f29;
-    border-radius: 16px;
-    padding: 1.5rem;
+/* Search Label */
+.search-label {
     text-align: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin: 20px 0;
+    color: #222;
 }
-.stMetric label {
+
+/* Inputs */
+input[type="text"] {
+    border-radius: 12px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    width: 100% !important;
+    box-shadow: 0px 2px 6px rgba(0,0,0,0.08);
     font-size: 1rem;
-    color: #b0bec5;
 }
-.stMetric span {
-    font-
+div[data-baseweb="select"] {
+    border-radius: 12px;
+    box-shadow: 0px 2px 6px rgba(0,0,0,0.08);
+}
+
+/* Tabs */
+.stTabs [data-baseweb="tab"] {
+    font-size: 1rem;
+    padding: 10px 20px;
+    border-radius: 10px 10px 0 0;
+    background-color: #e3f2fd;
+    margin-right: 5px;
+}
+.stTabs [aria-selected="true"] {
+    background-color: #0d47a1 !important;
+    color: white !important;
+}
+
+/* Metrics */
+[data-testid="stMetricValue"] {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #0d47a1;
+}
