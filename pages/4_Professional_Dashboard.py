@@ -1,16 +1,18 @@
 import streamlit as st
 import yfinance as yf
-import pandas as pd
-import plotly.graph_objects as go
 import plotly.express as px
+import plotly.graph_objects as go
 
 st.set_page_config(page_title="Professional Dashboard", layout="wide")
 
 # --- Use the stock selected from main page ---
-if "selected_stock" in st.session_state:
+if "selected_stock" in st.session_state and st.session_state["selected_stock"]:
     stock_symbol = st.session_state["selected_stock"]
+    st.success(f"📌 Selected Stock: **{stock_symbol}**")
 else:
-    stock_symbol = "AAPL"  # fallback default if nothing chosen
+    st.warning("⚠️ Please choose a stock from the home page to view the Professional Dashboard.")
+    st.stop()  # 🚪 stop execution until a stock is selected
+
 
 # =============================
 # Custom CSS for Styling
