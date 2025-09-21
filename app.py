@@ -52,6 +52,8 @@ if ticker:
     st.success(f"📌 Selected Stock: **{ticker}**")
     # ✅ Save ticker in session_state so other pages can access it
     st.session_state["selected_stock"] = ticker
+    # Debug info
+    st.write(f"Debug: Session state set to: {st.session_state.get('selected_stock', 'Not set')}")
 else:
     st.info("Please choose a stock to continue.")
 
@@ -96,14 +98,14 @@ col1, col2 = st.columns(2)
 with col1:
     if st.button("🎮 Storytelling"):
         if ticker:
-            st.session_state["selected_stock"] = ticker  # Fixed: Use consistent variable name
+            # Don't set it again, just use what's already there
             st.switch_page("pages/1_Storytelling.py")
         else:
             st.error("Pick a stock first!")
             
     if st.button("📑 PPT Generator"):
         if ticker:
-            st.session_state["selected_stock"] = ticker  # Fixed: Use consistent variable name
+            # Don't set it again, just use what's already there
             st.switch_page("pages/2_PPT_Generator.py")
         else:
             st.error("Pick a stock first!")
@@ -111,14 +113,14 @@ with col1:
 with col2:
     if st.button("🧩 Analogies"):
         if ticker:
-            st.session_state["selected_stock"] = ticker  # Fixed: Use consistent variable name
+            # Don't set it again, just use what's already there
             st.switch_page("pages/3_Analogies.py")
         else:
             st.error("Pick a stock first!")
             
     if st.button("📊 Professional Data & Trends"):
         if ticker:
-            st.session_state["selected_stock"] = ticker  # Fixed: Use consistent variable name
+            # Don't set it again, just use what's already there
             st.switch_page("pages/4_Professional_Dashboard.py")
         else:
             st.error("Pick a stock first!")
