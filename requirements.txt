@@ -6,4 +6,5 @@ matplotlib
 seaborn
 textblob
 requests
-
+plotly.graph_objects 
+plotly.express
