@@ -1,7 +1,8 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+import plotly.express as px
 
 # =============================
 # Custom CSS for Styling
@@ -10,30 +11,23 @@ st.markdown(
     """
     <style>
     div.stButton > button {
-        width: 500px;  
-        height: 70px;
-        font-size: 20px;
+        width: 300px;  
+        height: 60px;
+        font-size: 18px;
         font-weight: 600;
         text-align: center;
-        border-radius: 15px;
-        margin: 15px;
-    }
-
-    .button-container {
-        display: flex;
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: 20px;
+        border-radius: 12px;
+        margin: 10px;
     }
 
     div[data-baseweb="select"] {
-        height: 55px !important;
-        font-size: 18px !important;
+        height: 50px !important;
+        font-size: 16px !important;
     }
 
     div[data-baseweb="select"] > div {
-        height: 55px !important;
-        font-size: 18px !important;
+        height: 50px !important;
+        font-size: 16px !important;
     }
     </style>
     """,
@@ -43,75 +37,103 @@ st.markdown(
 # =============================
 # Dashboard Title
 # =============================
-st.title("📊 Professional Data & Trends")
+st.markdown("<h1 style='text-align: center;'>📊 Professional Data & Trends</h1>", unsafe_allow_html=True)
 
 # =============================
-# Stock Input
+# Layout: Stock + Period
 # =============================
-ticker = st.text_input("Enter Stock Ticker (e.g., AAPL, RELIANCE.NS, TCS.NS):", "AAPL")
+col1, col2 = st.columns([2, 1])
 
+with col1:
+    ticker = st.text_input("Enter Stock Ticker (e.g., AAPL, RELIANCE.NS, TCS.NS):", "AAPL")
+
+with col2:
+    time_range = st.selectbox("Growth Period", ["1mo", "3mo", "6mo", "1y", "5y", "max"], index=3)
+
+# =============================
+# Load Data
+# =============================
 if ticker:
     stock = yf.Ticker(ticker)
-
-    # Basic stock info
     info = stock.info
-
-    st.subheader(f"📌 Overview: {info.get('shortName', ticker)}")
-    st.write(
-        f"{info.get('longBusinessSummary', 'No company description available.')[:500]}..."
-    )
-
-    # =============================
-    # Chart 1: Growth Trend
-    # =============================
-    st.subheader("📈 Price Growth Over Time")
-
-    time_range = st.selectbox("Select Time Range", ["1mo", "3mo", "6mo", "1y", "5y", "max"])
-
     hist = stock.history(period=time_range)
 
-    fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(hist.index, hist["Close"], label="Closing Price", color="blue")
-    ax.set_title(f"{ticker} Stock Price ({time_range})")
-    ax.set_ylabel("Price (USD)")
-    ax.grid(True)
-    ax.legend()
-    st.pyplot(fig)
+    # =============================
+    # Overview + Chart 1
+    # =============================
+    st.markdown("---")
+    col_left, col_right = st.columns([1.5, 2])
+
+    with col_left:
+        st.subheader(f"📌 Overview: {info.get('shortName', ticker)}")
+        st.write(info.get('longBusinessSummary', 'No company description available.')[:600] + "...")
+
+    with col_right:
+        st.subheader("📈 Growth Trend")
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=hist.index,
+            y=hist["Close"],
+            mode="lines",
+            name="Closing Price",
+            line=dict(color="royalblue", width=2)
+        ))
+        fig.update_layout(
+            xaxis_title="Date",
+            yaxis_title="Price",
+            template="plotly_white",
+            height=400
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
     # =============================
+    # Chart 2 + Chart 3
+    # =============================
+    st.markdown("---")
+    col_left2, col_right2 = st.columns(2)
+
     # Chart 2: Key Metrics
+    with col_left2:
+        st.subheader("📊 Key Metrics")
+        metrics = {
+            "PE Ratio": info.get("trailingPE", None),
+            "Price-to-Book": info.get("priceToBook", None),
+            "Profit Margin": info.get("profitMargins", None),
+            "Return on Equity": info.get("returnOnEquity", None),
+        }
+        metrics_df = pd.DataFrame(list(metrics.items()), columns=["Metric", "Value"]).dropna()
+        fig2 = px.bar(metrics_df, x="Metric", y="Value", color="Metric", title="Key Ratios")
+        st.plotly_chart(fig2, use_container_width=True)
+
+    # Chart 3: Volume traded
+    with col_right2:
+        st.subheader("📊 Volume Traded")
+        fig3 = go.Figure()
+        fig3.add_trace(go.Bar(x=hist.index, y=hist["Volume"], marker_color="orange"))
+        fig3.update_layout(
+            xaxis_title="Date",
+            yaxis_title="Volume",
+            template="plotly_white",
+            height=400
+        )
+        st.plotly_chart(fig3, use_container_width=True)
+
     # =============================
-    st.subheader("📊 Key Financial Metrics")
-
-    metrics = {
-        "PE Ratio": info.get("trailingPE", None),
-        "Price-to-Book": info.get("priceToBook", None),
-        "Profit Margin": info.get("profitMargins", None),
-        "Return on Equity": info.get("returnOnEquity", None),
-    }
-
-    metrics_df = pd.DataFrame(list(metrics.items()), columns=["Metric", "Value"]).dropna()
-
-    fig2, ax2 = plt.subplots(figsize=(8, 4))
-    ax2.bar(metrics_df["Metric"], metrics_df["Value"], color="green")
-    ax2.set_title("Key Financial Ratios")
-    ax2.set_ylabel("Value")
-    st.pyplot(fig2)
-
+    # Quick Actions
     # =============================
-    # Action Buttons
-    # =============================
+    st.markdown("---")
     st.subheader("⚡ Quick Actions")
-    st.markdown('<div class="button-container">', unsafe_allow_html=True)
 
-    if st.button("📑 Download Report"):
-        st.write("Report download feature coming soon...")
+    colA, colB = st.columns(2)
 
-    if st.button("📂 Export Data to CSV"):
-        metrics_df.to_csv("metrics.csv", index=False)
-        st.success("Metrics exported as metrics.csv")
+    with colA:
+        if st.button("📑 Download as PDF"):
+            st.info("PDF export coming soon...")
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    with colB:
+        if st.button("📂 Download as Excel"):
+            hist.to_excel("stock_data.xlsx")
+            st.success("Excel file exported as stock_data.xlsx")
 
 else:
     st.warning("Please enter a valid stock ticker.")
