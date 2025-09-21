@@ -2,20 +2,9 @@ import streamlit as st
 import yfinance as yf
 import plotly.express as px
 import plotly.graph_objects as go
-import pandas as pd  # Added missing import
+import pandas as pd
 
 st.set_page_config(page_title="Professional Dashboard", layout="wide")
-
-# --- Use the stock selected from main page ---
-st.write(f"Debug: All session state keys: {list(st.session_state.keys())}")
-st.write(f"Debug: selected_stock value: {st.session_state.get('selected_stock', 'NOT FOUND')}")
-
-if "selected_stock" in st.session_state and st.session_state["selected_stock"]:
-    stock_symbol = st.session_state["selected_stock"]
-    st.success(f"📌 Selected Stock: **{stock_symbol}**")
-else:
-    st.warning("⚠️ Please choose a stock from the home page to view the Professional Dashboard.")
-    st.stop()  # 🚪 stop execution until a stock is selected
 
 # =============================
 # Custom CSS for Styling
@@ -50,36 +39,44 @@ st.markdown(
 st.markdown("<h1 style='text-align: center;'>📊 Professional Data & Trends</h1>", unsafe_allow_html=True)
 
 # =============================
-# Layout: Stock + Period
+# Get Stock from Session State
 # =============================
-col1, col2 = st.columns([2, 1])
+# Debug info - remove these lines once working
+st.write(f"Debug: All session state: {dict(st.session_state)}")
 
-with col1:
-    if "selected_stock" in st.session_state and st.session_state["selected_stock"]:
-        ticker = st.session_state["selected_stock"]  # ✅ use chosen stock
-        st.info(f"Using stock from homepage: {ticker}")
-    else:
-        ticker = st.text_input("Enter Stock Ticker (e.g., AAPL, RELIANCE.NS, TCS.NS):", "")
-        if not ticker:
-            st.warning("Please choose a stock from the home page or enter one here.")
-            st.stop()
+# Get the stock ticker
+ticker = None
+if "selected_stock" in st.session_state and st.session_state["selected_stock"]:
+    ticker = st.session_state["selected_stock"]
+    st.success(f"📌 Using Stock from Homepage: **{ticker}**")
+else:
+    st.warning("⚠️ No stock selected from homepage")
+    ticker = st.text_input("Enter Stock Ticker manually:", "")
+    if not ticker:
+        st.info("Please go back to homepage and select a stock, or enter one above.")
+        st.stop()
 
-with col2:
-    # Added missing time_range selection
-    time_range = st.selectbox(
-        "Select Time Period:",
-        options=["1mo", "3mo", "6mo", "1y", "2y", "5y"],
-        index=3  # Default to 1 year
-    )
+# Time period selection
+time_range = st.selectbox(
+    "📅 Select Time Period:",
+    options=["1mo", "3mo", "6mo", "1y", "2y", "5y"],
+    index=3  # Default to 1 year
+)
+
+st.write(f"Debug: Using ticker = {ticker}, time_range = {time_range}")
 
 # =============================
 # Load Data
 # =============================
 if ticker:
     try:
+        st.info(f"Loading data for {ticker}...")
+        
         stock = yf.Ticker(ticker)
         info = stock.info
         hist = stock.history(period=time_range)
+        
+        st.write(f"Debug: Got {len(hist)} data points")
         
         if not hist.empty:
             # =============================
@@ -89,10 +86,13 @@ if ticker:
             col_left, col_right = st.columns([1.3, 2])
             
             with col_left:
-                st.subheader(f"📌 Overview: {info.get('shortName', ticker)}")
+                company_name = info.get('shortName', info.get('longName', ticker))
+                st.subheader(f"📌 Overview: {company_name}")
+                
                 description = info.get('longBusinessSummary', 'No company description available.')
                 if len(description) > 900:
                     description = description[:900] + "..."
+                    
                 st.markdown(
                     f"<p style='text-align: left; font-size:16px; line-height:1.6;'>{description}</p>",
                     unsafe_allow_html=True
@@ -109,8 +109,9 @@ if ticker:
                     line=dict(color="royalblue", width=2)
                 ))
                 fig.update_layout(
+                    title=f"{ticker} Price Trend",
                     xaxis_title="Date",
-                    yaxis_title="Price",
+                    yaxis_title="Price ($)",
                     template="plotly_white",
                     height=450
                 )
@@ -125,13 +126,13 @@ if ticker:
             with col_left2:
                 st.subheader("📊 Key Metrics")
                 metrics = {
-                    "PE Ratio": info.get("trailingPE", None),
-                    "Price-to-Book": info.get("priceToBook", None),
-                    "Profit Margin": info.get("profitMargins", None),
-                    "Return on Equity": info.get("returnOnEquity", None),
+                    "PE Ratio": info.get("trailingPE"),
+                    "Price-to-Book": info.get("priceToBook"),
+                    "Profit Margin": info.get("profitMargins"),
+                    "Return on Equity": info.get("returnOnEquity"),
                 }
                 
-                # Filter out None values and create DataFrame
+                # Filter out None values
                 filtered_metrics = {k: v for k, v in metrics.items() if v is not None}
                 
                 if filtered_metrics:
@@ -144,8 +145,9 @@ if ticker:
                         x="Metric", 
                         y="Value", 
                         color="Metric", 
-                        title="Key Ratios"
+                        title=f"Key Financial Ratios - {ticker}"
                     )
+                    fig2.update_layout(showlegend=False)
                     st.plotly_chart(fig2, use_container_width=True)
                 else:
                     st.info("No financial metrics available for this stock.")
@@ -153,14 +155,43 @@ if ticker:
             with col_right2:
                 st.subheader("📊 Volume Traded")
                 fig3 = go.Figure()
-                fig3.add_trace(go.Bar(x=hist.index, y=hist["Volume"], marker_color="orange"))
+                fig3.add_trace(go.Bar(
+                    x=hist.index, 
+                    y=hist["Volume"], 
+                    marker_color="orange",
+                    name="Volume"
+                ))
                 fig3.update_layout(
+                    title=f"{ticker} Trading Volume",
                     xaxis_title="Date",
                     yaxis_title="Volume",
                     template="plotly_white",
                     height=400
                 )
                 st.plotly_chart(fig3, use_container_width=True)
+
+            # =============================
+            # Additional Stock Info
+            # =============================
+            st.markdown("---")
+            st.subheader("📋 Stock Information")
+            
+            col_info1, col_info2, col_info3 = st.columns(3)
+            
+            with col_info1:
+                current_price = hist["Close"].iloc[-1] if not hist.empty else "N/A"
+                st.metric("Current Price", f"${current_price:.2f}" if current_price != "N/A" else "N/A")
+                
+            with col_info2:
+                market_cap = info.get("marketCap")
+                if market_cap:
+                    st.metric("Market Cap", f"${market_cap/1e9:.1f}B")
+                else:
+                    st.metric("Market Cap", "N/A")
+                    
+            with col_info3:
+                sector = info.get("sector", "N/A")
+                st.metric("Sector", sector)
 
             # =============================
             # Quick Actions
@@ -171,20 +202,24 @@ if ticker:
             
             with colA:
                 if st.button("📑 Download as PDF"):
-                    st.info("PDF export coming soon...")
+                    st.info("PDF export feature coming soon...")
                     
             with colB:
                 if st.button("📂 Download as Excel"):
                     try:
-                        hist.to_excel("stock_data.xlsx")
-                        st.success("Excel file exported as stock_data.xlsx")
+                        filename = f"{ticker}_data_{time_range}.xlsx"
+                        hist.to_excel(filename)
+                        st.success(f"✅ Excel file exported as {filename}")
                     except Exception as e:
-                        st.error(f"Error exporting Excel: {str(e)}")
+                        st.error(f"❌ Error exporting Excel: {str(e)}")
+                        
         else:
-            st.error("No historical data found for this ticker and time range.")
+            st.error(f"❌ No historical data found for {ticker} in the {time_range} period.")
+            st.info("Try a different time period or check if the ticker symbol is correct.")
             
     except Exception as e:
-        st.error(f"Error loading data for {ticker}: {str(e)}")
+        st.error(f"❌ Error loading data for {ticker}: {str(e)}")
+        st.info("Please check if the ticker symbol is correct and try again.")
         
 else:
-    st.warning("Please enter a valid stock ticker.")
+    st.warning("Please select a stock to continue.")
