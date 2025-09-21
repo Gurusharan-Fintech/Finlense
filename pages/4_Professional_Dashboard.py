@@ -55,10 +55,14 @@ st.markdown("<h1 style='text-align: center;'>📊 Professional Data & Trends</h1
 col1, col2 = st.columns([2, 1])
 
 with col1:
-    ticker = st.text_input("Enter Stock Ticker (e.g., AAPL, RELIANCE.NS, TCS.NS):", "AAPL")
-
-with col2:
-    time_range = st.selectbox("Growth Period", ["1mo", "3mo", "6mo", "1y", "5y", "max"], index=3)
+    if "selected_stock" in st.session_state and st.session_state["selected_stock"]:
+        ticker = st.session_state["selected_stock"]  # ✅ use chosen stock
+        st.info(f"Using stock from homepage: {ticker}")
+    else:
+        ticker = st.text_input("Enter Stock Ticker (e.g., AAPL, RELIANCE.NS, TCS.NS):", "")
+        if not ticker:
+            st.warning("Please choose a stock from the home page or enter one here.")
+            st.stop()
 
 # =============================
 # Load Data
@@ -77,26 +81,28 @@ if ticker:
 
         with col_left:
             st.subheader(f"📌 Overview: {info.get('shortName', ticker)}")
-            st.write(info.get('longBusinessSummary', 'No company description available.')[:600] + "...")
+             st.markdown(
+                          f"<p style='text-align: left; font-size:16px; line-height:1.6;'>{info.get('longBusinessSummary', 'No company description available.')[:900]}...</p>",
+                           unsafe_allow_html=True
+    )
 
-        with col_right:
-            st.subheader("📈 Growth Trend")
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=hist.index,
-                y=hist["Close"],
-                mode="lines",
-                name="Closing Price",
-                line=dict(color="royalblue", width=2)
-            ))
-            fig.update_layout(
-                xaxis_title="Date",
-                yaxis_title="Price",
-                template="plotly_white",
-                height=400
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
+       with col_right:
+          st.subheader("📈 Growth Trend")
+          fig = go.Figure()
+          fig.add_trace(go.Scatter(
+          x=hist.index,
+          y=hist["Close"],
+          mode="lines",
+          name="Closing Price",
+          line=dict(color="royalblue", width=2)
+      ))
+    fig.update_layout(
+        xaxis_title="Date",
+        yaxis_title="Price",
+        template="plotly_white",
+        height=450
+    )
+    st.plotly_chart(fig, use_container_width=True)
         # =============================
         # Key Metrics + Volume
         # =============================
