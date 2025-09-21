@@ -50,6 +50,8 @@ else:
 
 if ticker:
     st.success(f"📌 Selected Stock: **{ticker}**")
+    # ✅ Save ticker in session_state so other pages can access it
+    st.session_state["selected_stock"] = ticker
 else:
     st.info("Please choose a stock to continue.")
 
