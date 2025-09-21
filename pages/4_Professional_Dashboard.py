@@ -4,6 +4,14 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 
+st.set_page_config(page_title="Professional Dashboard", layout="wide")
+
+# --- Use the stock selected from main page ---
+if "selected_stock" in st.session_state:
+    stock_symbol = st.session_state["selected_stock"]
+else:
+    stock_symbol = "AAPL"  # fallback default if nothing chosen
+
 # =============================
 # Custom CSS for Styling
 # =============================
