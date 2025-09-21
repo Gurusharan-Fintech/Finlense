@@ -7,6 +7,9 @@ import pandas as pd  # Added missing import
 st.set_page_config(page_title="Professional Dashboard", layout="wide")
 
 # --- Use the stock selected from main page ---
+st.write(f"Debug: All session state keys: {list(st.session_state.keys())}")
+st.write(f"Debug: selected_stock value: {st.session_state.get('selected_stock', 'NOT FOUND')}")
+
 if "selected_stock" in st.session_state and st.session_state["selected_stock"]:
     stock_symbol = st.session_state["selected_stock"]
     st.success(f"📌 Selected Stock: **{stock_symbol}**")
