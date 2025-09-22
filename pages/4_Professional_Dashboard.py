@@ -267,8 +267,10 @@ if ticker:
                         buffer = BytesIO()
                         
                         with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-                            # Sheet 1: Historical Data
+                            # Sheet 1: Historical Data - Fix timezone issue
                             hist_export = hist.copy()
+                            # Remove timezone info to avoid Excel compatibility issues
+                            hist_export.index = hist_export.index.tz_localize(None) if hist_export.index.tz is not None else hist_export.index
                             hist_export.index.name = 'Date'
                             hist_export.to_excel(writer, sheet_name='Historical_Data')
                             
@@ -321,7 +323,7 @@ if ticker:
                         
                     except Exception as e:
                         st.error(f"❌ Error creating Excel file: {str(e)}")
-                        st.info("💡 Make sure you have the required packages installed")
+                        st.info("💡 Try installing: pip install openpyxl")
                         
         else:
             st.error("No historical data found for this ticker and time range.")
