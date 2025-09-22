@@ -10,3 +10,4 @@ plotly.graph_objects
 plotly.express
 openpyxl
 datetime
+reportlab
