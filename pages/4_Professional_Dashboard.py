@@ -100,6 +100,50 @@ if ticker:
             st.plotly_chart(fig, use_container_width=True)
 
         # =============================
+        # AI Analysis (Mistral via Ollama)
+        # =============================
+        st.markdown("---")
+        st.subheader("🤖 AI-Powered Analysis & Prediction")
+
+        user_prompt = f"""
+        Analyze the stock {ticker} using the following metrics:
+        PE Ratio: {info.get("trailingPE", "N/A")},
+        Price-to-Book: {info.get("priceToBook", "N/A")},
+        Profit Margin: {info.get("profitMargins", "N/A")},
+        Return on Equity: {info.get("returnOnEquity", "N/A")}.
+        Provide a detailed professional analysis including:
+        - Current performance overview
+        - Possible growth potential
+        - Risks and challenges
+        - A prediction of near-term trend
+        Keep it concise but insightful.
+        """
+
+        try:
+            with st.spinner("🤖 Generating AI analysis..."):
+                result = subprocess.run(
+                    ["ollama", "run", "mistral"],
+                    input=user_prompt,
+                    capture_output=True,
+                    text=True  # ✅ ensures input/output are treated as strings
+                )
+
+            if result.returncode == 0:
+                ai_response = result.stdout.strip()
+                if ai_response:
+                    st.write(ai_response)
+                else:
+                    st.warning("⚠️ AI model returned no response. Make sure Mistral is installed in Ollama.")
+            else:
+                st.warning("⚠️ Ollama not found. Please install Ollama & Mistral locally to enable AI predictions.")
+
+        except FileNotFoundError:
+            st.error("⚠️ Ollama is not installed. Please download it from: https://ollama.ai")
+
+        except Exception as e:
+            st.warning(f"⚠️ AI analysis could not be generated. Error: {e}")
+
+        # =============================
         # Key Metrics + Volume
         # =============================
         st.markdown("---")
@@ -131,44 +175,6 @@ if ticker:
                 height=400
             )
             st.plotly_chart(fig3, use_container_width=True)
-
-        # =============================
-        # AI Analysis (Mistral via Ollama)
-        # =============================
-        st.markdown("---")
-        st.subheader("🤖 AI-Powered Analysis & Prediction")
-
-        # Try to call Ollama
-        try:
-            user_prompt = f"""
-            Analyze the stock {ticker} using the following metrics:
-            PE Ratio: {info.get("trailingPE", "N/A")},
-            Price-to-Book: {info.get("priceToBook", "N/A")},
-            Profit Margin: {info.get("profitMargins", "N/A")},
-            Return on Equity: {info.get("returnOnEquity", "N/A")}.
-            Provide a detailed professional analysis including:
-            - Current performance overview
-            - Possible growth potential
-            - Risks and challenges
-            - A prediction of near-term trend
-            Keep it concise but insightful.
-            """
-
-            result = subprocess.run(
-                ["ollama", "run", "mistral"],
-                input=user_prompt.encode("utf-8"),
-                capture_output=True,
-                text=True
-            )
-
-            if result.returncode == 0:
-                ai_response = result.stdout.strip()
-                st.write(ai_response)
-            else:
-                st.warning("⚠️ AI analysis unavailable (Ollama model not found). Please install Ollama and Mistral locally.")
-
-        except Exception as e:
-            st.warning(f"⚠️ AI analysis could not be generated. Error: {e}")
 
         # =============================
         # Quick Actions
