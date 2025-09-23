@@ -11,3 +11,6 @@ plotly.express
 openpyxl
 datetime
 reportlab
+statsmodels
+scipy
+numpy
