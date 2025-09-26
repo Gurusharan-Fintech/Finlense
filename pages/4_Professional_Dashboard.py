@@ -150,24 +150,16 @@ def main():
     st.markdown(
         """
         <style>
-        /* Background */
         .stApp {
             background: #f8fafc;
             font-family: 'Segoe UI', sans-serif;
         }
-
-        /* Titles */
         h1, h2, h3 {
-            font-family: 'Segoe UI', sans-serif;
             color: #1e3a8a;
         }
-
-        /* Cards */
         .block-container {
             padding: 2rem 3rem;
         }
-
-        /* Buttons */
         .stDownloadButton>button, .stButton>button {
             background: #1e3a8a;
             color: white;
@@ -178,64 +170,62 @@ def main():
         }
         .stDownloadButton>button:hover, .stButton>button:hover {
             background: #2563eb;
-            color: white;
-        }
-
-        /* Info box */
-        .stAlert {
-            border-radius: 12px;
         }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
-    st.title("📊 Professional Stock Analysis Dashboard")
-    st.markdown("Get AI-powered insights, professional charts, and detailed reports for any stock.")
+    # --- Use the stock selected from main page ---
+    if "selected_stock" in st.session_state and st.session_state["selected_stock"]:
+        ticker = st.session_state["selected_stock"]
+        st.success(f"📌 Selected Stock: **{ticker}**")
+    else:
+        st.warning("⚠️ Please choose a stock from the home page to view the Professional Dashboard.")
+        st.stop()
 
-    ticker = st.text_input("Enter stock ticker (e.g., AAPL, TSLA):", "AAPL")
-    start_date = st.date_input("Start Date", datetime(2023, 1, 1))
-    end_date = st.date_input("End Date", datetime.today())
+    # Load data
+    start_date = datetime(2023, 1, 1)
+    end_date = datetime.today()
+    df = get_stock_data(ticker, start_date, end_date)
 
-    if st.button("🚀 Generate Dashboard"):
-        with st.spinner("Fetching stock data..."):
-            df = get_stock_data(ticker, start_date, end_date)
+    # AI Analysis
+    st.subheader("🤖 AI-Powered Stock Analysis")
+    ai_text = generate_ai_analysis(ticker, df)
+    st.write(ai_text)
 
-        st.subheader("🤖 AI-Powered Stock Analysis")
-        ai_text = generate_ai_analysis(ticker, df)
-        st.write(ai_text)
+    # Charts
+    st.subheader("📈 Stock Price Charts")
+    col1, col2 = st.columns(2)
 
-        st.subheader("📈 Stock Price Charts")
-        col1, col2 = st.columns(2)
+    with col1:
+        fig_candle = go.Figure(data=[go.Candlestick(
+            x=df.index,
+            open=df['Open'],
+            high=df['High'],
+            low=df['Low'],
+            close=df['Close']
+        )])
+        fig_candle.update_layout(title=f"{ticker} Candlestick Chart", xaxis_rangeslider_visible=False)
+        st.plotly_chart(fig_candle, use_container_width=True)
 
-        with col1:
-            fig_candle = go.Figure(data=[go.Candlestick(
-                x=df.index,
-                open=df['Open'],
-                high=df['High'],
-                low=df['Low'],
-                close=df['Close']
-            )])
-            fig_candle.update_layout(title=f"{ticker} Candlestick Chart", xaxis_rangeslider_visible=False)
-            st.plotly_chart(fig_candle, use_container_width=True)
+    with col2:
+        df["MA30"] = df["Close"].rolling(30).mean()
+        fig_ma = px.line(df, x=df.index, y=["Close", "MA30"], title=f"{ticker} - Close vs 30-day MA")
+        st.plotly_chart(fig_ma, use_container_width=True)
 
-        with col2:
-            df["MA30"] = df["Close"].rolling(30).mean()
-            fig_ma = px.line(df, x=df.index, y=["Close", "MA30"], title=f"{ticker} - Close vs 30-day MA")
-            st.plotly_chart(fig_ma, use_container_width=True)
+    # Downloads
+    st.subheader("📥 Download Reports")
+    col_pdf, col_excel = st.columns(2)
 
-        # Download buttons
-        st.subheader("📥 Download Reports")
-        col_pdf, col_excel = st.columns(2)
+    pdf_buffer = create_pdf(ticker, df, ai_text)
+    col_pdf.download_button("Download PDF Report", data=pdf_buffer, file_name=f"{ticker}_report.pdf", mime="application/pdf")
 
-        pdf_buffer = create_pdf(ticker, df, ai_text)
-        col_pdf.download_button("Download PDF Report", data=pdf_buffer, file_name=f"{ticker}_report.pdf", mime="application/pdf")
+    excel_buffer = create_excel(ticker, df, ai_text)
+    col_excel.download_button("Download Excel Report", data=excel_buffer, file_name=f"{ticker}_report.xlsx", mime="application/vnd.ms-excel")
 
-        excel_buffer = create_excel(ticker, df, ai_text)
-        col_excel.download_button("Download Excel Report", data=excel_buffer, file_name=f"{ticker}_report.xlsx", mime="application/vnd.ms-excel")
-
-        # Note for committee
-        st.info("⚠️ To enable full AI analysis, please install [Ollama](https://ollama.ai) and pull the model: `ollama pull mistral`.")
+    # Note for committee
+    st.info("⚠️ To enable full AI analysis, please install [Ollama](https://ollama.ai) and run: `ollama pull mistral`.")
 
 
 if __name__ == "__main__":
