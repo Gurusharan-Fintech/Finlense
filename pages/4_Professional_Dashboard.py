@@ -1,223 +1,242 @@
 import streamlit as st
 import yfinance as yf
+import pandas as pd
+import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.graph_objects as go
-import pandas as pd
 from io import BytesIO
+from datetime import datetime
+
+# PDF
 from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-import subprocess
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
+from reportlab.lib.styles import getSampleStyleSheet
 
-st.set_page_config(page_title="Professional Dashboard", layout="wide")
+# Excel
+from openpyxl import Workbook
+from openpyxl.chart import LineChart, Reference
 
-# --- Use the stock selected from main page ---
-if "selected_stock" in st.session_state and st.session_state["selected_stock"]:
-    stock_symbol = st.session_state["selected_stock"]
-    st.success(f"📌 Selected Stock: **{stock_symbol}**")
-else:
-    st.warning("⚠️ Please choose a stock from the home page to view the Professional Dashboard.")
-    st.stop()  # 🚪 stop execution until a stock is selected
+# AI fallback
+try:
+    import ollama
+    OLLAMA_AVAILABLE = True
+except ImportError:
+    OLLAMA_AVAILABLE = False
 
-# =============================
-# Custom CSS for Styling
-# =============================
-st.markdown(
+
+# ==============================
+# Function: Fetch stock data
+# ==============================
+def get_stock_data(ticker, start, end):
+    df = yf.download(ticker, start=start, end=end)
+    df.index = df.index.tz_localize(None)  # remove timezone
+    return df
+
+
+# ==============================
+# Function: AI Analysis
+# ==============================
+def generate_ai_analysis(ticker, df):
+    prompt = f"""
+    Analyze the stock {ticker} using the following data:
+    - Latest Close Price: {df['Close'][-1]:.2f}
+    - 7-day average: {df['Close'][-7:].mean():.2f}
+    - 30-day average: {df['Close'][-30:].mean():.2f}
+    - Max price in given range: {df['Close'].max():.2f}
+    - Min price in given range: {df['Close'].min():.2f}
+
+    Provide:
+    1. A professional analysis of the stock performance.
+    2. Prediction (bullish, bearish, or neutral trend).
+    3. Key reasons behind this prediction.
+    4. Risks and opportunities for investors.
     """
-    <style>
-    div.stButton > button {
-        width: 300px;  
-        height: 60px;
-        font-size: 18px;
-        font-weight: 600;
-        text-align: center;
-        border-radius: 12px;
-        margin: 10px;
-    }
-    div[data-baseweb="select"] {
-        height: 40px !important;
-        font-size: 16px !important;
-    }
-    div[data-baseweb="select"] > div {
-        height: 40px !important;
-        font-size: 16px !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
 
-# =============================
-# Dashboard Title
-# =============================
-st.markdown("<h1 style='text-align: center;'>📊 Professional Data & AI Analysis</h1>", unsafe_allow_html=True)
+    if OLLAMA_AVAILABLE:
+        try:
+            response = ollama.chat(model="mistral", messages=[{"role": "user", "content": prompt}])
+            return response["message"]["content"]
+        except Exception as e:
+            return f"⚠️ Ollama error: {e}\n\nFallback analysis: Based on the given metrics, the stock shows stable performance."
+    else:
+        return f"""
+        (Fallback - AI model not available)
 
-# =============================
-# Layout: Stock + Period
-# =============================
-col1, col2 = st.columns([2, 1])
+        Stock {ticker} shows a latest close price of {df['Close'][-1]:.2f}. 
+        The short-term average ({df['Close'][-7:].mean():.2f}) compared to the 30-day average 
+        ({df['Close'][-30:].mean():.2f}) indicates {'upward momentum' if df['Close'][-7:].mean() > df['Close'][-30:].mean() else 'sideways or downward pressure'}.
 
-with col1:
-    ticker = stock_symbol  # use the stock passed from main page
-
-with col2:
-    time_range = st.selectbox("Growth Period", ["1mo", "3mo", "6mo", "1y", "5y", "max"], index=3)
-
-# =============================
-# Load Data
-# =============================
-if ticker:
-    stock = yf.Ticker(ticker)
-    info = stock.info
-    hist = stock.history(period=time_range)
-
-    if not hist.empty:
-        # =============================
-        # Overview + Growth Chart
-        # =============================
-        st.markdown("---")
-        col_left, col_right = st.columns([1.3, 2])
-
-        with col_left:
-            st.subheader(f"📌 Overview: {info.get('shortName', ticker)}")
-            st.write(info.get('longBusinessSummary', 'No company description available.')[:700] + "...")
-
-        with col_right:
-            st.subheader("📈 Growth Trend")
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=hist.index,
-                y=hist["Close"],
-                mode="lines",
-                name="Closing Price",
-                line=dict(color="royalblue", width=2)
-            ))
-            fig.update_layout(
-                xaxis_title="Date",
-                yaxis_title="Price",
-                template="plotly_white",
-                height=400
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
-        # =============================
-        # AI Analysis (Mistral via Ollama)
-        # =============================
-        st.markdown("---")
-        st.subheader("🤖 AI-Powered Analysis & Prediction")
-
-        user_prompt = f"""
-        Analyze the stock {ticker} using the following metrics:
-        PE Ratio: {info.get("trailingPE", "N/A")},
-        Price-to-Book: {info.get("priceToBook", "N/A")},
-        Profit Margin: {info.get("profitMargins", "N/A")},
-        Return on Equity: {info.get("returnOnEquity", "N/A")}.
-        Provide a detailed professional analysis including:
-        - Current performance overview
-        - Possible growth potential
-        - Risks and challenges
-        - A prediction of near-term trend
-        Keep it concise but insightful.
+        Risks: market volatility, macroeconomic factors.  
+        Opportunities: momentum trading, medium-term hold.
         """
 
-        try:
-            with st.spinner("🤖 Generating AI analysis..."):
-                result = subprocess.run(
-                    ["ollama", "run", "mistral"],
-                    input=user_prompt,
-                    capture_output=True,
-                    text=True  # ✅ ensures input/output are treated as strings
-                )
 
-            if result.returncode == 0:
-                ai_response = result.stdout.strip()
-                if ai_response:
-                    st.write(ai_response)
-                else:
-                    st.warning("⚠️ AI model returned no response. Make sure Mistral is installed in Ollama.")
-            else:
-                st.warning("⚠️ Ollama not found. Please install Ollama & Mistral locally to enable AI predictions.")
+# ==============================
+# Function: Generate PDF
+# ==============================
+def create_pdf(ticker, df, ai_text):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    styles = getSampleStyleSheet()
+    elements = []
 
-        except FileNotFoundError:
-            st.error("⚠️ Ollama is not installed. Please download it from: https://ollama.ai")
+    elements.append(Paragraph(f"<b>Stock Analysis Report - {ticker}</b>", styles["Title"]))
+    elements.append(Spacer(1, 12))
 
-        except Exception as e:
-            st.warning(f"⚠️ AI analysis could not be generated. Error: {e}")
+    elements.append(Paragraph("<b>AI Analysis:</b>", styles["Heading2"]))
+    elements.append(Paragraph(ai_text, styles["Normal"]))
+    elements.append(Spacer(1, 12))
 
-        # =============================
-        # Key Metrics + Volume
-        # =============================
-        st.markdown("---")
-        col_left2, col_right2 = st.columns(2)
+    # Generate chart
+    fig, ax = plt.subplots(figsize=(6, 3))
+    df["Close"].plot(ax=ax, title=f"{ticker} Closing Prices")
+    chart_path = f"{ticker}_chart.png"
+    fig.savefig(chart_path)
+    plt.close(fig)
 
-        with col_left2:
-            st.subheader("📊 Key Metrics")
-            metrics = {
-                "PE Ratio": info.get("trailingPE", None),
-                "Price-to-Book": info.get("priceToBook", None),
-                "Profit Margin": info.get("profitMargins", None),
-                "Return on Equity": info.get("returnOnEquity", None),
-            }
-            metrics_df = pd.DataFrame(list(metrics.items()), columns=["Metric", "Value"]).dropna()
-            if not metrics_df.empty:
-                fig2 = px.bar(metrics_df, x="Metric", y="Value", color="Metric", title="Key Ratios")
-                st.plotly_chart(fig2, use_container_width=True)
-            else:
-                st.info("No financial metrics available for this stock.")
+    elements.append(Image(chart_path, width=400, height=200))
+    elements.append(Spacer(1, 12))
 
-        with col_right2:
-            st.subheader("📊 Volume Traded")
-            fig3 = go.Figure()
-            fig3.add_trace(go.Bar(x=hist.index, y=hist["Volume"], marker_color="orange"))
-            fig3.update_layout(
-                xaxis_title="Date",
-                yaxis_title="Volume",
-                template="plotly_white",
-                height=400
-            )
-            st.plotly_chart(fig3, use_container_width=True)
+    elements.append(Paragraph("<b>Summary Metrics:</b>", styles["Heading2"]))
+    elements.append(Paragraph(f"Latest Close: {df['Close'][-1]:.2f}", styles["Normal"]))
+    elements.append(Paragraph(f"7-day Avg: {df['Close'][-7:].mean():.2f}", styles["Normal"]))
+    elements.append(Paragraph(f"30-day Avg: {df['Close'][-30:].mean():.2f}", styles["Normal"]))
+    elements.append(Paragraph(f"Max: {df['Close'].max():.2f}", styles["Normal"]))
+    elements.append(Paragraph(f"Min: {df['Close'].min():.2f}", styles["Normal"]))
 
-        # =============================
-        # Quick Actions
-        # =============================
-        st.markdown("---")
-        st.subheader("⚡ Quick Actions")
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
 
-        colA, colB = st.columns(2)
 
-        with colA:
-            if st.button("📑 Download as PDF"):
-                pdf_buffer = BytesIO()
-                c = canvas.Canvas(pdf_buffer, pagesize=letter)
-                c.setFont("Helvetica", 12)
-                c.drawString(100, 750, f"Stock Report: {ticker}")
-                c.drawString(100, 730, f"Period: {time_range}")
-                c.drawString(100, 710, f"PE Ratio: {info.get('trailingPE', 'N/A')}")
-                c.drawString(100, 690, f"Price-to-Book: {info.get('priceToBook', 'N/A')}")
-                c.drawString(100, 670, f"Profit Margin: {info.get('profitMargins', 'N/A')}")
-                c.drawString(100, 650, f"Return on Equity: {info.get('returnOnEquity', 'N/A')}")
-                c.save()
-                pdf_buffer.seek(0)
-                st.download_button(
-                    "⬇️ Download PDF Report",
-                    data=pdf_buffer,
-                    file_name=f"{ticker}_report.pdf",
-                    mime="application/pdf"
-                )
+# ==============================
+# Function: Generate Excel
+# ==============================
+def create_excel(ticker, df, ai_text):
+    output = BytesIO()
+    wb = Workbook()
+    ws_data = wb.active
+    ws_data.title = "Stock Data"
 
-        with colB:
-            if st.button("📂 Download as Excel"):
-                excel_buffer = BytesIO()
-                hist.index = hist.index.tz_localize(None)  # remove timezone for Excel compatibility
-                hist.to_excel(excel_buffer, index=True)
-                excel_buffer.seek(0)
-                st.download_button(
-                    "⬇️ Download Excel Data",
-                    data=excel_buffer,
-                    file_name=f"{ticker}_data.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
+    # Write data
+    ws_data.append(["Date", "Open", "High", "Low", "Close", "Adj Close", "Volume"])
+    for idx, row in df.iterrows():
+        ws_data.append([idx.strftime("%Y-%m-%d")] + list(row.values))
 
-    else:
-        st.error("No historical data found for this ticker and time range.")
-else:
-    st.warning("Please enter a valid stock ticker.")
+    # Add chart
+    chart = LineChart()
+    chart.title = f"{ticker} Closing Prices"
+    data = Reference(ws_data, min_col=5, min_row=1, max_row=len(df) + 1)
+    chart.add_data(data, titles_from_data=True)
+    ws_data.add_chart(chart, "I5")
+
+    # AI Sheet
+    ws_ai = wb.create_sheet("AI Analysis")
+    ws_ai["A1"] = f"AI Analysis for {ticker}"
+    ws_ai["A2"] = ai_text
+
+    wb.save(output)
+    output.seek(0)
+    return output
+
+
+# ==============================
+# Streamlit Dashboard
+# ==============================
+def main():
+    st.set_page_config(page_title="Professional Stock Dashboard", layout="wide")
+
+    # Custom CSS
+    st.markdown(
+        """
+        <style>
+        /* Background */
+        .stApp {
+            background: #f8fafc;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* Titles */
+        h1, h2, h3 {
+            font-family: 'Segoe UI', sans-serif;
+            color: #1e3a8a;
+        }
+
+        /* Cards */
+        .block-container {
+            padding: 2rem 3rem;
+        }
+
+        /* Buttons */
+        .stDownloadButton>button, .stButton>button {
+            background: #1e3a8a;
+            color: white;
+            border-radius: 10px;
+            padding: 0.6rem 1rem;
+            border: none;
+            font-weight: 600;
+        }
+        .stDownloadButton>button:hover, .stButton>button:hover {
+            background: #2563eb;
+            color: white;
+        }
+
+        /* Info box */
+        .stAlert {
+            border-radius: 12px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.title("📊 Professional Stock Analysis Dashboard")
+    st.markdown("Get AI-powered insights, professional charts, and detailed reports for any stock.")
+
+    ticker = st.text_input("Enter stock ticker (e.g., AAPL, TSLA):", "AAPL")
+    start_date = st.date_input("Start Date", datetime(2023, 1, 1))
+    end_date = st.date_input("End Date", datetime.today())
+
+    if st.button("🚀 Generate Dashboard"):
+        with st.spinner("Fetching stock data..."):
+            df = get_stock_data(ticker, start_date, end_date)
+
+        st.subheader("🤖 AI-Powered Stock Analysis")
+        ai_text = generate_ai_analysis(ticker, df)
+        st.write(ai_text)
+
+        st.subheader("📈 Stock Price Charts")
+        col1, col2 = st.columns(2)
+
+        with col1:
+            fig_candle = go.Figure(data=[go.Candlestick(
+                x=df.index,
+                open=df['Open'],
+                high=df['High'],
+                low=df['Low'],
+                close=df['Close']
+            )])
+            fig_candle.update_layout(title=f"{ticker} Candlestick Chart", xaxis_rangeslider_visible=False)
+            st.plotly_chart(fig_candle, use_container_width=True)
+
+        with col2:
+            df["MA30"] = df["Close"].rolling(30).mean()
+            fig_ma = px.line(df, x=df.index, y=["Close", "MA30"], title=f"{ticker} - Close vs 30-day MA")
+            st.plotly_chart(fig_ma, use_container_width=True)
+
+        # Download buttons
+        st.subheader("📥 Download Reports")
+        col_pdf, col_excel = st.columns(2)
+
+        pdf_buffer = create_pdf(ticker, df, ai_text)
+        col_pdf.download_button("Download PDF Report", data=pdf_buffer, file_name=f"{ticker}_report.pdf", mime="application/pdf")
+
+        excel_buffer = create_excel(ticker, df, ai_text)
+        col_excel.download_button("Download Excel Report", data=excel_buffer, file_name=f"{ticker}_report.xlsx", mime="application/vnd.ms-excel")
+
+        # Note for committee
+        st.info("⚠️ To enable full AI analysis, please install [Ollama](https://ollama.ai) and pull the model: `ollama pull mistral`.")
+
+
+if __name__ == "__main__":
+    main()
