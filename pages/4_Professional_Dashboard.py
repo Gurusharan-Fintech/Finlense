@@ -171,7 +171,7 @@ def main():
             padding: 2rem 3rem;
         }
         .stDownloadButton>button, .stButton>button {
-            background: #1e3a8a;
+            background: #0d47a1;
             color: white;
             border-radius: 10px;
             padding: 0.6rem 1rem;
