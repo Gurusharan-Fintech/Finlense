@@ -37,37 +37,47 @@ def get_stock_data(ticker, start, end):
 # Function: AI Analysis
 # ==============================
 def generate_ai_analysis(ticker, df):
+    """Generate AI-based stock analysis using Ollama with fallback."""
+    # Handle close price safely
+    close_col = None
+    for col in ["Close", "close", "Adj Close", "adjclose"]:
+        if col in df.columns:
+            close_col = col
+            break
+
+    if close_col is None:
+        latest_price = "N/A"
+        avg_volume = "N/A"
+    else:
+        latest_price = f"{df[close_col].iloc[-1]:.2f}"
+        avg_volume = f"{df['Volume'].mean():.2f}" if "Volume" in df.columns else "N/A"
+
     prompt = f"""
-    Analyze the stock {ticker} using the following data:
-    - Latest Close Price: {df['Close'][-1]:.2f}
-    - 7-day average: {df['Close'][-7:].mean():.2f}
-    - 30-day average: {df['Close'][-30:].mean():.2f}
-    - Max price in given range: {df['Close'].max():.2f}
-    - Min price in given range: {df['Close'].min():.2f}
+    You are a financial analyst. Analyze the stock **{ticker}** using the following data:
+    - Latest Close Price: {latest_price}
+    - Average Volume: {avg_volume}
+    - Time Range: {df.index.min().strftime('%Y-%m-%d')} to {df.index.max().strftime('%Y-%m-%d')}
 
     Provide:
-    1. A professional analysis of the stock performance.
-    2. Prediction (bullish, bearish, or neutral trend).
-    3. Key reasons behind this prediction.
-    4. Risks and opportunities for investors.
+    1. A detailed professional summary of the stock performance.
+    2. Key strengths and risks of this stock.
+    3. A prediction for the near future with reasoning.
+    Keep the response professional and clear.
     """
 
-    if OLLAMA_AVAILABLE:
-        try:
-            response = ollama.chat(model="mistral", messages=[{"role": "user", "content": prompt}])
-            return response["message"]["content"]
-        except Exception as e:
-            return f"⚠️ Ollama error: {e}\n\nFallback analysis: Based on the given metrics, the stock shows stable performance."
-    else:
-        return f"""
-        (Fallback - AI model not available)
+    try:
+        # Try Ollama locally
+        result = subprocess.run(
+            ["ollama", "run", "mistral"],
+            input=prompt.encode("utf-8"),
+            capture_output=True,
+            text=True
+        )
+        return result.stdout if result.stdout.strip() else "AI model returned no response."
+    except Exception as e:
+        # Fallback
+        return f"(Fallback AI Analysis) Based on the available data for {ticker}, the latest price is {latest_price}, and the average volume is {avg_volume}. The stock has shown market-relevant movements. More detailed AI analysis requires Ollama installed. Error: {e}"
 
-        Stock {ticker} shows a latest close price of {df['Close'][-1]:.2f}. 
-        The short-term average ({df['Close'][-7:].mean():.2f}) compared to the 30-day average 
-        ({df['Close'][-30:].mean():.2f}) indicates {'upward momentum' if df['Close'][-7:].mean() > df['Close'][-30:].mean() else 'sideways or downward pressure'}.
-
-        Risks: market volatility, macroeconomic factors.  
-        Opportunities: momentum trading, medium-term hold.
         """
 
 
