@@ -15,3 +15,4 @@ statsmodels
 scipy
 numpy
 ollama
+xlsxwriter
