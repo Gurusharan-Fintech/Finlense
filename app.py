@@ -43,23 +43,29 @@ nasdaq = {
 stock_options = {**nifty50, **sensex30, **nasdaq}
 
 # -------------------- UNIFIED SEARCH BOX --------------------
+# -------------------- UNIFIED SEARCH BOX --------------------
 st.subheader("🔎 Start by choosing a stock")
 ticker_choice = st.selectbox(
     "Enter Stock Ticker (search or select):",
-    options=[""] + list(stock_options.values()) + list(stock_options.keys()),
+    options=[""] + list(stock_options.keys()) + list(stock_options.values()),
     index=0,
     placeholder="Type or select a stock (e.g., AAPL, RELIANCE.NS)...",
 )
 
-if ticker_choice in stock_options:
-    ticker = stock_options[ticker_choice]
-else:
-    ticker = ticker_choice if ticker_choice else None
+# Map correctly whether user picked company name or ticker
+ticker = None
+if ticker_choice:
+    if ticker_choice in stock_options:  
+        # User picked a company name
+        ticker = stock_options[ticker_choice]
+    elif ticker_choice in stock_options.values():  
+        # User picked a ticker directly
+        ticker = ticker_choice
 
+# Save + display result
 if ticker:
     st.success(f"📌 Selected Stock: **{ticker}**")
     st.session_state["selected_stock"] = ticker
-    st.write(f"Debug: Session state set to: {st.session_state.get('selected_stock', 'Not set')}")
 else:
     st.info("Please choose a stock to continue.")
 
