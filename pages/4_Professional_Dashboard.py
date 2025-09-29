@@ -1,189 +1,147 @@
 import streamlit as st
-import pandas as pd
 import yfinance as yf
 import plotly.graph_objects as go
-import io
-import requests
-from reportlab.lib.pagesizes import A4
+import pandas as pd
+from io import BytesIO
+import base64
+from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
-from openpyxl import load_workbook
-from openpyxl.utils import get_column_letter
-from openpyxl.chart import LineChart, Reference, StockChart
+from reportlab.lib import colors
+import subprocess
 
-# -------------------------------
-# AI Analysis (Ollama Fallback)
-# -------------------------------
-def generate_ai_analysis(ticker, df):
+# -------------------- DATA FETCH --------------------
+def load_data(ticker):
     try:
-        import ollama
-        latest_close = df["Close"].iloc[-1] if not df.empty else "N/A"
-        prompt = f"""
-        Provide a detailed financial analysis for stock {ticker}.
-        Latest Close Price: {latest_close}
-        Include trends, risks, opportunities, and investor outlook.
-        """
-        response = ollama.chat(model="mistral", messages=[{"role": "user", "content": prompt}])
-        return response["message"]["content"].strip()
+        df = yf.download(ticker, period="6mo", interval="1d")
+        if df.empty:
+            return pd.DataFrame()
+        df.reset_index(inplace=True)
+        return df
     except Exception:
-        return "⚠️ AI analysis unavailable (Ollama not installed). Please install it from https://ollama.ai/."
+        return pd.DataFrame()
 
-# -------------------------------
-# Create Excel with Charts
-# -------------------------------
-def create_excel(ticker, df, ai_text):
-    buffer = io.BytesIO()
-    df_reset = df.reset_index()
+# -------------------- PLOTS --------------------
+def price_chart(df, ticker):
+    fig = go.Figure()
 
-    # Step 1: Write to Excel
+    # OHLC chart
+    fig.add_trace(go.Candlestick(
+        x=df['Date'], open=df['Open'], high=df['High'],
+        low=df['Low'], close=df['Close'], name="OHLC"
+    ))
+
+    # 200-day MA
+    if len(df) > 200:
+        df['MA200'] = df['Close'].rolling(200).mean()
+        fig.add_trace(go.Scatter(
+            x=df['Date'], y=df['MA200'], mode='lines',
+            name="200 MA", line=dict(color="blue")
+        ))
+
+    fig.update_layout(title=f"{ticker} Price Movement", xaxis_title="Date", yaxis_title="Price")
+    return fig
+
+def volume_chart(df, ticker):
+    fig = go.Figure()
+    fig.add_trace(go.Bar(x=df['Date'], y=df['Volume'], name="Volume", marker_color="orange"))
+    fig.update_layout(title=f"{ticker} Volume Trends", xaxis_title="Date", yaxis_title="Volume")
+    return fig
+
+# -------------------- EXPORTS --------------------
+def create_excel(df, ticker):
+    buffer = BytesIO()
     with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
-        df_reset.to_excel(writer, sheet_name="Stock Data", index=False)
+        df.to_excel(writer, index=False, sheet_name="Stock Data")
+    return buffer
 
-        summary_df = pd.DataFrame({
-            "Metric": ["Ticker", "Rows", "Columns"],
-            "Value": [ticker, df_reset.shape[0], df_reset.shape[1]]
-        })
-        summary_df.to_excel(writer, sheet_name="Summary", index=False)
-
-        ai_df = pd.DataFrame({"AI Insights": [ai_text]})
-        ai_df.to_excel(writer, sheet_name="AI Analysis", index=False)
-
-    buffer.seek(0)
-    wb = load_workbook(buffer)
-
-    # Step 2: Auto-adjust columns
-    for sheet in wb.sheetnames:
-        ws = wb[sheet]
-        for col in ws.columns:
-            max_length = 0
-            col_letter = get_column_letter(col[0].column)
-            for cell in col:
-                if cell.value:
-                    max_length = max(max_length, len(str(cell.value)))
-            ws.column_dimensions[col_letter].width = max_length + 2
-
-    # Step 3: Add Charts
-    if not df.empty:
-        ws_data = wb["Stock Data"]
-        ws_chart = wb.create_sheet("Charts")
-
-        # Line Chart: Closing Price + MA20
-        line_chart = LineChart()
-        line_chart.title = f"{ticker} Closing Price with 20-Day MA"
-        values = Reference(ws_data, min_col=df_reset.columns.get_loc("Close")+1,
-                           min_row=2, max_row=len(df_reset)+1)
-        dates = Reference(ws_data, min_col=1, min_row=2, max_row=len(df_reset)+1)
-        line_chart.add_data(values, titles_from_data=False)
-        line_chart.set_categories(dates)
-
-        # Add MA20
-        df_reset["MA20"] = df_reset["Close"].rolling(20).mean()
-        ma_col = df_reset.shape[1] + 1
-        ws_data.cell(row=1, column=ma_col, value="MA20")
-        for i, val in enumerate(df_reset["MA20"], start=2):
-            ws_data.cell(row=i, column=ma_col, value=float(val) if pd.notna(val) else None)
-        ma_values = Reference(ws_data, min_col=ma_col, min_row=2, max_row=len(df_reset)+1)
-        line_chart.add_data(ma_values, titles_from_data=False)
-
-        ws_chart.add_chart(line_chart, "B2")
-
-        # Stock Chart (OHLC)
-        stock_chart = StockChart()
-        stock_chart.title = f"{ticker} OHLC"
-        ohlc = Reference(ws_data, min_col=df_reset.columns.get_loc("Open")+1, max_col=df_reset.columns.get_loc("Close")+1,
-                         min_row=1, max_row=len(df_reset)+1)
-        stock_chart.add_data(ohlc, titles_from_data=True)
-        stock_chart.set_categories(dates)
-        ws_chart.add_chart(stock_chart, "B20")
-
-    buffer2 = io.BytesIO()
-    wb.save(buffer2)
-    buffer2.seek(0)
-    return buffer2
-
-# -------------------------------
-# Create PDF Report
-# -------------------------------
 def create_pdf(ticker, df, ai_text):
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
     styles = getSampleStyleSheet()
-    content = []
+    story = []
 
-    content.append(Paragraph(f"<b>Stock Report: {ticker}</b>", styles["Title"]))
-    content.append(Spacer(1, 12))
+    story.append(Paragraph(f"Stock Report: {ticker}", styles["Title"]))
+    story.append(Spacer(1, 12))
 
-    content.append(Paragraph("<b>AI Stock Analysis</b>", styles["Heading2"]))
-    content.append(Paragraph(ai_text, styles["Normal"]))
-    content.append(Spacer(1, 12))
+    # Safe stats
+    try:
+        latest_close = float(df['Close'].iloc[-1])
+    except Exception:
+        latest_close = "N/A"
 
-    if not df.empty:
-        stats = [
-            ["Latest Close", f"{df['Close'].iloc[-1]:.2f}"],
-            ["Max Close", f"{df['Close'].max():.2f}"],
-            ["Min Close", f"{df['Close'].min():.2f}"],
-        ]
-        table = Table(stats)
-        table.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, 0), colors.grey),
-                                   ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-                                   ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-                                   ("GRID", (0, 0), (-1, -1), 1, colors.black)]))
-        content.append(table)
+    try:
+        avg_volume = float(df['Volume'].mean())
+    except Exception:
+        avg_volume = "N/A"
 
-    doc.build(content)
+    stats = [
+        ["Metric", "Value"],
+        ["Latest Close", latest_close],
+        ["Average Volume", avg_volume],
+    ]
+
+    table = Table(stats)
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0,0), (-1,0), colors.grey),
+        ("TEXTCOLOR", (0,0), (-1,0), colors.whitesmoke),
+        ("ALIGN", (0,0), (-1,-1), "CENTER"),
+        ("GRID", (0,0), (-1,-1), 1, colors.black)
+    ]))
+
+    story.append(table)
+    story.append(Spacer(1, 24))
+    story.append(Paragraph("AI Summary:", styles["Heading2"]))
+    story.append(Paragraph(ai_text, styles["Normal"]))
+
+    doc.build(story)
     buffer.seek(0)
     return buffer
 
-# -------------------------------
-# Main Dashboard
-# -------------------------------
-def main():
-    st.title("📊 Professional Data & Trends")
+# -------------------- AI SUMMARY --------------------
+def get_ai_summary(ticker, df):
+    try:
+        subprocess.run(["ollama", "--version"], check=True, capture_output=True)
+        prompt = f"Summarize stock performance for {ticker} in 3-4 sentences."
+        result = subprocess.run(["ollama", "run", "llama3"], input=prompt.encode(), capture_output=True)
+        return result.stdout.decode().strip()
+    except Exception:
+        return "AI summary not available (Ollama not installed)."
 
-    ticker = st.text_input("Enter Stock Ticker (e.g. AAPL, TSLA):", "AAPL")
-    if not ticker:
+# -------------------- MAIN APP --------------------
+def main():
+    st.title("📈 Professional Dashboard")
+
+    if "selected_ticker" not in st.session_state:
+        st.warning("⚠️ Please select a stock ticker on the homepage.")
         return
 
-    df = yf.download(ticker, period="6mo", interval="1d")
+    ticker = st.session_state["selected_ticker"]
+    st.subheader(f"Showing analysis for: {ticker}")
+
+    df = load_data(ticker)
 
     if df.empty:
-        st.warning("⚠️ No data found for this ticker.")
+        st.error("No data found for this ticker. Try another one.")
         return
 
-    # AI Analysis
-    st.subheader("😁 AI Stock Analysis")
-    ai_text = generate_ai_analysis(ticker, df)
+    # Charts
+    st.plotly_chart(price_chart(df, ticker), use_container_width=True)
+    st.plotly_chart(volume_chart(df, ticker), use_container_width=True)
+
+    # AI Summary
+    ai_text = get_ai_summary(ticker, df)
+    st.subheader("🤖 AI Summary")
     st.write(ai_text)
 
-    # Price Movement Chart
-    st.subheader("📈 Price Movement")
-    fig = go.Figure()
-    fig.add_trace(go.Candlestick(
-        x=df.index,
-        open=df["Open"], high=df["High"],
-        low=df["Low"], close=df["Close"],
-        name="OHLC"
-    ))
-    fig.add_trace(go.Scatter(x=df.index, y=df["Close"].rolling(20).mean(),
-                             line=dict(color="blue", width=1.5), name="20D MA"))
-    st.plotly_chart(fig, use_container_width=True)
-
-    # Volume Chart
-    st.subheader("📊 Volume Trends")
-    vol_fig = go.Figure()
-    vol_fig.add_trace(go.Bar(x=df.index, y=df["Volume"], name="Volume"))
-    st.plotly_chart(vol_fig, use_container_width=True)
-
     # Downloads
+    st.subheader("📥 Export Data")
+
+    excel_buffer = create_excel(df, ticker)
+    st.download_button("Download Excel", data=excel_buffer, file_name=f"{ticker}_data.xlsx")
+
     pdf_buffer = create_pdf(ticker, df, ai_text)
-    excel_buffer = create_excel(ticker, df, ai_text)
-
-    st.download_button("📥 Download PDF Report", data=pdf_buffer,
-                       file_name=f"{ticker}_report.pdf", mime="application/pdf")
-
-    st.download_button("📥 Download Excel Report", data=excel_buffer,
-                       file_name=f"{ticker}_report.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    st.download_button("Download PDF", data=pdf_buffer, file_name=f"{ticker}_report.pdf")
 
 if __name__ == "__main__":
     main()
