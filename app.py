@@ -2,10 +2,20 @@ import streamlit as st
 
 # -------------------- APP CONFIG --------------------
 st.set_page_config(page_title="FinLens AI", page_icon="📈", layout="wide")
+
+# -------------------- GLOBAL CSS --------------------
+# Load custom CSS (from Styles.css)
+try:
+    with open("Styles.css") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+except FileNotFoundError:
+    st.warning("⚠️ Styles.css not found. Please add it for full styling.")
+
+# -------------------- TITLE --------------------
 st.title("📊 FinLens AI - Your Gen Z Finance Lens")
 st.markdown("**Making Wall Street a Walk Down Your Street 🚀**")
 
-# -------------------- STOCK LIST --------------------
+# -------------------- STOCK LISTS --------------------
 nifty50 = {
     "Reliance Industries": "RELIANCE.NS",
     "TCS": "TCS.NS",
@@ -43,17 +53,16 @@ ticker_choice = st.selectbox(
     placeholder="Type or select a stock (e.g., AAPL, RELIANCE.NS)...",
 )
 
+# Normalize ticker (handle name vs. symbol)
 if ticker_choice in stock_options:
     ticker = stock_options[ticker_choice]
 else:
     ticker = ticker_choice if ticker_choice else None
 
+# Save ticker in session_state
 if ticker:
-    st.success(f"📌 Selected Stock: **{ticker}**")
-    # ✅ Save ticker in session_state so other pages can access it
-    st.session_state["selected_stock"] = ticker
-    # Debug info
-    st.write(f"Debug: Session state set to: {st.session_state.get('selected_stock', 'Not set')}")
+    st.session_state["selected_stock"] = ticker.upper()
+    st.success(f"📌 Selected Stock: **{ticker.upper()}**")
 else:
     st.info("Please choose a stock to continue.")
 
@@ -90,7 +99,8 @@ st.markdown(
     }
     </style>
     """,
-    unsafe_allow_html=True)
+    unsafe_allow_html=True,
+)
 
 # -------------------- BUTTON LAYOUT --------------------
 col1, col2 = st.columns(2)
@@ -98,14 +108,12 @@ col1, col2 = st.columns(2)
 with col1:
     if st.button("🎮 Storytelling"):
         if ticker:
-            # Don't set it again, just use what's already there
             st.switch_page("pages/1_Storytelling.py")
         else:
             st.error("Pick a stock first!")
-            
+
     if st.button("📑 PPT Generator"):
         if ticker:
-            # Don't set it again, just use what's already there
             st.switch_page("pages/2_PPT_Generator.py")
         else:
             st.error("Pick a stock first!")
@@ -113,14 +121,12 @@ with col1:
 with col2:
     if st.button("🧩 Analogies"):
         if ticker:
-            # Don't set it again, just use what's already there
             st.switch_page("pages/3_Analogies.py")
         else:
             st.error("Pick a stock first!")
-            
+
     if st.button("📊 Professional Data & Trends"):
         if ticker:
-            # Don't set it again, just use what's already there
             st.switch_page("pages/4_Professional_Dashboard.py")
         else:
             st.error("Pick a stock first!")
