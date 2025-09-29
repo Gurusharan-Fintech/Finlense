@@ -3,19 +3,17 @@ import streamlit as st
 # -------------------- APP CONFIG --------------------
 st.set_page_config(page_title="FinLens AI", page_icon="📈", layout="wide")
 
-# -------------------- GLOBAL CSS --------------------
-# Load custom CSS (from Styles.css)
-try:
-    with open("Styles.css") as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-except FileNotFoundError:
-    st.warning("⚠️ Styles.css not found. Please add it for full styling.")
-
 # -------------------- TITLE --------------------
-st.title("📊 FinLens AI - Your Gen Z Finance Lens")
-st.markdown("**Making Wall Street a Walk Down Your Street 🚀**")
+st.markdown(
+    "<h1 class='center-title'>📊 FinLens AI - Your Gen Z Finance Lens</h1>",
+    unsafe_allow_html=True,
+)
+st.markdown(
+    "<p class='center-title'><b>Making Wall Street a Walk Down Your Street 🚀</b></p>",
+    unsafe_allow_html=True,
+)
 
-# -------------------- STOCK LISTS --------------------
+# -------------------- STOCK LIST --------------------
 nifty50 = {
     "Reliance Industries": "RELIANCE.NS",
     "TCS": "TCS.NS",
@@ -53,25 +51,31 @@ ticker_choice = st.selectbox(
     placeholder="Type or select a stock (e.g., AAPL, RELIANCE.NS)...",
 )
 
-# Normalize ticker (handle name vs. symbol)
 if ticker_choice in stock_options:
     ticker = stock_options[ticker_choice]
 else:
     ticker = ticker_choice if ticker_choice else None
 
-# Save ticker in session_state
 if ticker:
-    st.session_state["selected_stock"] = ticker.upper()
-    st.success(f"📌 Selected Stock: **{ticker.upper()}**")
+    st.success(f"📌 Selected Stock: **{ticker}**")
+    st.session_state["selected_stock"] = ticker
+    st.write(f"Debug: Session state set to: {st.session_state.get('selected_stock', 'Not set')}")
 else:
     st.info("Please choose a stock to continue.")
 
-# -------------------- BUTTON STYLING --------------------
-st.markdown("### 🚀 Choose a mode")
+# -------------------- CSS STYLING --------------------
 st.markdown(
     """
     <style>
-    /* Make buttons bigger and center text */
+    /* ---------- Title Center ---------- */
+    .center-title {
+        text-align: center !important;
+        width: 100%;
+        display: block;
+        margin: auto;
+    }
+
+    /* ---------- Buttons ---------- */
     div.stButton > button {
         width: 500px;         
         height: 70px;
@@ -81,6 +85,7 @@ st.markdown(
         border-radius: 15px;
         margin: 15px;
     }
+
     /* Center the 4 buttons in a grid */
     .button-container {
         display: flex;
@@ -88,7 +93,8 @@ st.markdown(
         flex-wrap: wrap;
         gap: 20px;
     }
-    /* Make dropdown (selectbox) bigger */
+
+    /* ---------- Dropdown ---------- */
     div[data-baseweb="select"] {
         height: 45px !important;
         font-size: 18px !important;
@@ -97,9 +103,15 @@ st.markdown(
         height: 45px !important;
         font-size: 18px !important;
     }
+
+    /* ---------- Fix fog after download ---------- */
+    [data-testid="stNotification"] {
+        opacity: 1 !important;
+        backdrop-filter: none !important;
+    }
     </style>
     """,
-    unsafe_allow_html=True,
+    unsafe_allow_html=True
 )
 
 # -------------------- BUTTON LAYOUT --------------------
